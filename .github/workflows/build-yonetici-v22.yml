@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
           mkdir -p bundle admin
           unzip -q TTO_Yonetici_v2_2_APK_Derleme.zip -d bundle
-          unzip -q bundle/TTO_Yonetici_Kaynak.zip -d admin
+          unzip -oq bundle/TTO_Yonetici_Kaynak.zip -d admin
           test -s admin/www/index.html
           grep -q 'loadPublishUpload' admin/www/index.html
       - name: Build Android project
