@@ -1,0 +1,68 @@
+name: TTO Yonetici v2.4 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TTO_Yonetici_v2.4_Tam_UI_Ayarlari.html'
+      - '.github/workflows/build-yonetici-v24.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK 36
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+      - name: Extract previous working build and replace only HTML
+        run: |
+          set -euo pipefail
+          test -s TTO_Yonetici_v2_3_APK_Derleme.zip
+          test -s TTO_Yonetici_v2.4_Tam_UI_Ayarlari.html
+          mkdir -p bundle admin
+          unzip -q TTO_Yonetici_v2_3_APK_Derleme.zip -d bundle
+          unzip -q bundle/TTO_Yonetici_Kaynak.zip -d admin
+          cp TTO_Yonetici_v2.4_Tam_UI_Ayarlari.html admin/www/index.html
+          grep -q 'TAM TİPOGRAFİ AYARLARI' admin/www/index.html
+          grep -q 'tto_loading_live' admin/www/index.html
+      - name: Install Capacitor and build Android
+        working-directory: admin
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+          python3 scripts/portrait.py
+          chmod +x android/gradlew
+          cd android
+          ./gradlew --no-daemon assembleDebug
+      - name: Verify APK
+        run: test -s admin/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Yonetici-v2.4-APK
+          path: admin/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error
+      - name: Publish direct download on GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=tto-yonetici-v2.4
+          cp admin/android/app/build/outputs/apk/debug/app-debug.apk TTO-Yonetici-v2.4.apk
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" TTO-Yonetici-v2.4.apk --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" TTO-Yonetici-v2.4.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "TTO Yonetici v2.4" --notes "Sahne UI ogeleri icin ayrintili tipografi, renk, cerceve, golge, yerlesim ve yukleme sahnesi ayarlari."
+          fi
