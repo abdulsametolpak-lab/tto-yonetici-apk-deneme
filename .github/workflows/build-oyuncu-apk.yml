@@ -9,7 +9,7 @@ on:
       - '.github/workflows/build-oyuncu-apk.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android:
@@ -58,3 +58,17 @@ jobs:
           path: player/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish direct APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp player/android/app/build/outputs/apk/debug/app-debug.apk TTO-Oyuncu-v0.3.apk
+          test -s TTO-Oyuncu-v0.3.apk
+          TAG="tto-oyuncu-v0.3"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" TTO-Oyuncu-v0.3.apk --clobber
+          else
+            gh release create "$TAG" TTO-Oyuncu-v0.3.apk --target "$GITHUB_SHA" --title "TTO Oyuncu v0.3" --notes "APK-yerel karsilama ve yukleme sahneleri"
+          fi
