@@ -1,0 +1,60 @@
+name: TTO Oyuncu v0.3 APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'TTO_Oyuncu_v0_3_APK_Derleme.zip'
+      - '.github/workflows/build-oyuncu-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - name: Android SDK API 36
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+      - name: Unpack sources
+        run: |
+          set -euo pipefail
+          mkdir -p bundle player
+          unzip -q TTO_Oyuncu_v0_3_APK_Derleme.zip -d bundle
+          unzip -q bundle/TTO_Oyuncu_Kaynak.zip -d player
+          test -f player/package.json
+          test -f player/public/assets/welcome-default.jpg
+          test -f player/public/assets/loading-default.jpg
+      - name: Build web
+        working-directory: player
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          test -f dist/assets/welcome-default.jpg
+          test -f dist/assets/loading-default.jpg
+      - name: Build Android
+        working-directory: player
+        run: |
+          npx cap add android
+          npx cap sync android
+          python3 scripts/portrait.py
+          chmod +x android/gradlew
+          cd android
+          ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Oyuncu-v0.3-APK
+          path: player/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
