@@ -1,0 +1,70 @@
+name: TTO Yonetici v2.3 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TTO_Yonetici_v2_3_APK_Derleme.zip'
+      - '.github/workflows/build-yonetici-v23.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+      - name: Extract sources and verify scene inventory
+        run: |
+          set -euo pipefail
+          mkdir -p bundle build_admin_v23
+          unzip -q TTO_Yonetici_v2_3_APK_Derleme.zip -d bundle
+          unzip -oq bundle/TTO_Yonetici_Kaynak.zip -d build_admin_v23
+          test -s build_admin_v23/www/index.html
+          grep -q 'ttoUiInventory' build_admin_v23/www/index.html
+          grep -q 'ttoLoadElementList' build_admin_v23/www/index.html
+          grep -q 'loadPublishUpload' build_admin_v23/www/index.html
+          grep -q 'TTOSimulator' build_admin_v23/www/index.html
+      - name: Build Android project
+        working-directory: build_admin_v23
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+          python3 scripts/portrait.py
+      - name: Build debug APK
+        working-directory: build_admin_v23/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+      - name: Verify APK
+        run: test -s build_admin_v23/android/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Yonetici-v2.3-APK
+          path: build_admin_v23/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish direct APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=tto-yonetici-v2.3
+          APK=build_admin_v23/android/app/build/outputs/apk/debug/app-debug.apk
+          cp "$APK" TTO-Yonetici-v2.3.apk
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" TTO-Yonetici-v2.3.apk --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" TTO-Yonetici-v2.3.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "TTO Yonetici v2.3 — Sahne UI Envanteri" --notes "Sahne bazli tum UI ogelerini listeleme, arama, ozelliklerini goruntuleme ve mevcut ayarlara gitme. Supabase, loading studio ve simulator korunur."
+          fi
