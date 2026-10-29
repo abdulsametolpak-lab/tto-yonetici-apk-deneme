@@ -1,0 +1,74 @@
+name: TTO Oyuncu v0.5 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TTO_Oyuncu_v0_5_APK_Derleme.zip'
+      - '.github/workflows/build-oyuncu-v05.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+      - name: Extract Player sources
+        run: |
+          set -euo pipefail
+          mkdir -p bundle player
+          unzip -q TTO_Oyuncu_v0_5_APK_Derleme.zip -d bundle
+          unzip -q bundle/TTO_Oyuncu_Kaynak.zip -d player
+          test -f player/src/loading-cache.js
+          test -f player/src/welcome-cache.js
+          test -f player/public/assets/loading-default.jpg
+          grep -q 'width:19%;flex:0 0 19%' player/src/loading.css
+          grep -q 'clamp(14px,3.65cqw,34px)' player/src/loading.css
+      - name: Build web and Android project
+        working-directory: player
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          test -s dist/assets/loading-default.jpg
+          test -s dist/assets/welcome-default.jpg
+          grep -qr 'tto_loading_live' dist/assets
+          npx cap add android
+          npx cap sync android
+          python3 scripts/portrait.py
+      - name: Build debug APK
+        working-directory: player/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+      - name: Verify APK
+        run: test -s player/android/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Oyuncu-v0.5-APK
+          path: player/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish direct APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=tto-oyuncu-v0.5
+          APK=player/android/app/build/outputs/apk/debug/app-debug.apk
+          cp "$APK" TTO-Oyuncu-v0.5.apk
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" TTO-Oyuncu-v0.5.apk --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" TTO-Oyuncu-v0.5.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "TTO Oyuncu v0.5" --notes "Fix loading percentage (0-100%) staying within the gold-bordered meter on phones and tablets. Preserves offline scenes and Supabase updates."
+          fi
