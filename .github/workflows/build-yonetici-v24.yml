@@ -31,7 +31,7 @@ jobs:
           test -s TTO_Yonetici_v2.4_Tam_UI_Ayarlari.html
           mkdir -p bundle admin
           unzip -q TTO_Yonetici_v2_3_APK_Derleme.zip -d bundle
-          unzip -q bundle/TTO_Yonetici_Kaynak.zip -d admin
+          unzip -oq bundle/TTO_Yonetici_Kaynak.zip -d admin
           cp TTO_Yonetici_v2.4_Tam_UI_Ayarlari.html admin/www/index.html
           grep -q 'TAM TİPOGRAFİ AYARLARI' admin/www/index.html
           grep -q 'tto_loading_live' admin/www/index.html
