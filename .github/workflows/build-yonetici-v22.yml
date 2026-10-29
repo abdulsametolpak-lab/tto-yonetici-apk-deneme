@@ -27,29 +27,29 @@ jobs:
       - name: Extract Administrator sources
         run: |
           set -euo pipefail
-          mkdir -p bundle admin
+          mkdir -p bundle build_admin_v22
           unzip -q TTO_Yonetici_v2_2_APK_Derleme.zip -d bundle
-          unzip -oq bundle/TTO_Yonetici_Kaynak.zip -d admin
-          test -s admin/www/index.html
-          grep -q 'loadPublishUpload' admin/www/index.html
+          unzip -oq bundle/TTO_Yonetici_Kaynak.zip -d build_admin_v22
+          test -s build_admin_v22/www/index.html
+          grep -q 'loadPublishUpload' build_admin_v22/www/index.html
       - name: Build Android project
-        working-directory: admin
+        working-directory: build_admin_v22
         run: |
           npm install --no-audit --no-fund
           npx cap add android
           npx cap sync android
           python3 scripts/portrait.py
       - name: Build debug APK
-        working-directory: admin/android
+        working-directory: build_admin_v22/android
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
       - name: Verify APK
-        run: test -s admin/android/app/build/outputs/apk/debug/app-debug.apk
+        run: test -s build_admin_v22/android/app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: TTO-Yonetici-v2.2-APK
-          path: admin/android/app/build/outputs/apk/debug/app-debug.apk
+          path: build_admin_v22/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
       - name: Publish direct APK download
@@ -58,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
           TAG=tto-yonetici-v2.2
-          APK=admin/android/app/build/outputs/apk/debug/app-debug.apk
+          APK=build_admin_v22/android/app/build/outputs/apk/debug/app-debug.apk
           cp "$APK" TTO-Yonetici-v2.2.apk
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" TTO-Yonetici-v2.2.apk --clobber --repo "$GITHUB_REPOSITORY"
