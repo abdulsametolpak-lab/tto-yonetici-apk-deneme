@@ -1,1 +1,78 @@
 
+name: TTO Yonetici Test APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'TTO_Yonetici_APK_Deneme_YENI_Paket.zip'
+      - '.github/workflows/build-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: GitHub deposunu indir
+        uses: actions/checkout@v4
+
+      - name: Node.js 22 kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Java 21 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v4
+
+      - name: Android API 36 paketlerini kur
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+
+      - name: Yukledigin ana ZIP ve icindeki kaynak ZIP dosyasini ac
+        run: |
+          set -euo pipefail
+          test -f TTO_Yonetici_APK_Deneme_YENI_Paket.zip
+          mkdir -p bundle appsrc
+          unzip -q TTO_Yonetici_APK_Deneme_YENI_Paket.zip -d bundle
+          test -f bundle/TTO_Yonetici_Kaynak.zip
+          unzip -q bundle/TTO_Yonetici_Kaynak.zip -d appsrc
+          test -f appsrc/package.json
+          test -f appsrc/capacitor.config.json
+          test -f appsrc/www/index.html
+          test -f appsrc/scripts/portrait.py
+
+      - name: Capacitor Android projesini olustur
+        working-directory: appsrc
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+          python3 scripts/portrait.py
+          grep -q 'android:screenOrientation="portrait"' android/app/src/main/AndroidManifest.xml
+
+      - name: Android debug APK olustur
+        working-directory: appsrc/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: APK dosyasini kontrol et
+        run: test -s appsrc/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: APK dosyasini indirilebilir yap
+        uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Yonetici-Test-APK
+          path: appsrc/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
