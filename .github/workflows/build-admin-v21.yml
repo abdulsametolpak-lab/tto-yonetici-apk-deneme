@@ -1,0 +1,68 @@
+name: TTO Yonetici v2.1 APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'admin/**'
+      - '.github/workflows/build-admin-v21.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - name: Android API 36
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+      - name: Confirm project and generate Capacitor Android
+        working-directory: admin
+        run: |
+          set -euo pipefail
+          test -s www/index.html
+          grep -q '9 YÖNETİM ALANI' www/index.html
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+          python3 scripts/portrait.py
+          grep -q 'android:screenOrientation="portrait"' android/app/src/main/AndroidManifest.xml
+      - name: Build debug APK
+        working-directory: admin/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+      - name: Name the APK
+        run: |
+          set -euo pipefail
+          test -s admin/android/app/build/outputs/apk/debug/app-debug.apk
+          cp admin/android/app/build/outputs/apk/debug/app-debug.apk TTO-Yonetici-v2.1.apk
+      - name: Upload artifact backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Yonetici-v2.1-APK
+          path: TTO-Yonetici-v2.1.apk
+          retention-days: 14
+          if-no-files-found: error
+      - name: Publish downloadable APK release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: tto-yonetici-v2.1
+          name: TTO Yönetici v2.1 - Sade Menü
+          body: |-
+            Tasarım sadeleştirmesi: tekrar eden kontrol merkezi ve tasarım kısayolları temizlendi.
+            Supabase, oyuncular, ekonomi, yükleme/karşılama ve simülatör modülleri korundu.
+            Bu APK test amaçlı debug derlemesidir.
+          files: TTO-Yonetici-v2.1.apk
+          fail_on_unmatched_files: true

@@ -1,0 +1,14 @@
+{
+  "name": "tto-yonetici-capacitor",
+  "version": "2.1.0",
+  "private": true,
+  "description": "TTO Yonetici v2.1 minimal navigation, legacy modules preserved",
+  "scripts": {},
+  "dependencies": {
+    "@capacitor/core": "8.5.3",
+    "@capacitor/android": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}
