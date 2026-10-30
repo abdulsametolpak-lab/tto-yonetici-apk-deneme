@@ -1,0 +1,69 @@
+name: TTO Yonetici v2.7 APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TTO_Yonetici_v2.7_Giris_Sayfasi.html'
+      - '.github/workflows/build-yonetici-v27.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - name: Android SDK API 36
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+      - name: Reuse tested Capacitor shell, install organized HTML
+        run: |
+          set -euo pipefail
+          mkdir -p bundle admin
+          unzip -oq TTO_Yonetici_v2_3_APK_Derleme.zip -d bundle
+          unzip -oq bundle/TTO_Yonetici_Kaynak.zip -d admin
+          cp TTO_Yonetici_v2.7_Giris_Sayfasi.html admin/www/index.html
+          test -s admin/www/index.html
+          grep -q 'ttoGuideStudio' admin/www/index.html
+          grep -q 'ttoGuideLoad' admin/www/index.html
+          grep -q 'loadPublishUpload' admin/www/index.html
+          grep -q 'studioInspectorForm' admin/www/index.html
+      - name: Build Android
+        working-directory: admin
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+          python3 scripts/portrait.py
+          chmod +x android/gradlew
+          cd android
+          ./gradlew --no-daemon assembleDebug
+      - name: Verify Android APK
+        run: test -s admin/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Save APK build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Yonetici-v2.7-APK
+          path: admin/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish direct APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=tto-yonetici-v2.7
+          cp admin/android/app/build/outputs/apk/debug/app-debug.apk TTO-Yonetici-v2.7.apk
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" TTO-Yonetici-v2.7.apk --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" TTO-Yonetici-v2.7.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "TTO Yonetici v2.7" --notes "Remove login preview button; preserve existing secure login and dashboard."
+          fi
