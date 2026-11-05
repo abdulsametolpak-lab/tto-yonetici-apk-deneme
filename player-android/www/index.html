@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#07121d">
-<title>Türkiye Ticaret Online · Oyuncu APK v1.7</title>
+<title>Türkiye Ticaret Online · Oyuncu APK v1.8</title>
 <style>
 :root{color-scheme:dark;--gold:#e4be7e;--cream:#fff0ce;--blue:#89aac7;--surface:#091a2c;--ease:cubic-bezier(.2,.7,.2,1)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040b12;color:var(--cream);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.52;cursor:wait}
@@ -140,9 +140,11 @@ body{display:block!important;background:#06101c!important}
 @media (orientation:landscape){.layer[data-kind="text"]{letter-spacing:0;} }
 
 
+/* v1.8: never add visual elements outside the editor-published scene */
+#scene:before,.old-scene:before{display:none!important}
 /* v1.4: loading barrier; never advance with half-downloaded galleries */
 #loadGate{position:absolute;z-index:15;left:5%;right:5%;top:32%;bottom:auto;display:flex;flex-direction:column;gap:9px;align-items:center;padding:10px 12px 12px;background:linear-gradient(155deg,#071522ed,#122b3eef);border:1px solid #d9b77b78;border-radius:13px;box-shadow:0 7px 25px #0009;text-align:center}
-#loadGate[hidden]{display:none!important}
+#loadGate[hidden],#loadGate:not(.error){display:none!important}
 #loadGateLabel{font-size:12px;font-weight:800;color:#f8dda8}
 #loadGateInfo{font-size:10px;color:#c8d9e7;line-height:1.35}
 #loadGate button{border:1px solid #ffe4ae;background:linear-gradient(#f8daa4,#bc8546);border-radius:10px;color:#221409;font-weight:900;padding:10px 22px;cursor:pointer}
@@ -160,7 +162,7 @@ body{display:block!important;background:#06101c!important}
  <button id="nextButton" hidden type="button">DEVAM ET</button>
  <div id="statusWrap"><div id="syncState" class="idle" role="status" aria-live="polite">Hazırlanıyor…</div></div>
  <div id="notice" hidden role="status" aria-live="polite"></div>
- <div id="loadGate" hidden role="status" aria-live="polite"><div id="loadGateLabel">Oyun dosyaları hazırlanıyor…</div><div id="loadGateInfo">Sahneler ve avatarlar cihaza indiriliyor.</div><button id="retryLoad" hidden type="button">YENİDEN DENE</button></div>
+ <div id="loadGate" hidden role="alert" aria-live="assertive"><div id="loadGateLabel"></div><div id="loadGateInfo"></div><button id="retryLoad" hidden type="button">YENİDEN DENE</button></div>
  <section id="playerHome" hidden aria-label="Oyuncu Paneli">
   <div class="player-home-card">
     <div class="home-logo">TTO</div><div class="home-caption">TÜRKİYE TİCARET ONLINE</div>
@@ -347,7 +349,7 @@ function getByKey(key){return bundle?.scenes?.find(x=>x.page_key===key)||null}
 function homeName(){return getScene('Karşılama')?'Karşılama':getScene('Yükleme')?'Yükleme':getScene('Giriş')?'Giriş':bundle.scenes[0]?.page_name}
 const hasUserReducedMotion=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 function metric(k){switch(k){case'downloadPercent':return dl.total?String(Math.round(100*dl.loaded/dl.total))+'%':(dl.state==='done'?'100%':'0%');case'downloadSpeed':return fmtBytes(dl.speed)+'/sn';case'downloadTotal':return fmtBytes(dl.total);case'downloadLoaded':return fmtBytes(dl.loaded);default:return '—'}}
-function patchMetrics(){const stage=$('scene');stage.querySelectorAll('[data-metric]').forEach(el=>{const k=el.dataset.metric;if(el.dataset.kind==='ring'){const pct=dl.total?Math.min(100,100*dl.loaded/dl.total):(dl.state==='done'?100:0);el.style.setProperty('--ring-pct',pct+'%');(el.querySelector('.ring-value')||el).textContent=Math.round(pct)+'%'}else{const n=el.querySelector('.value');if(n)n.textContent=metric(k);else el.textContent=metric(k)}})}
+function patchMetrics(){const stage=$('scene');stage.querySelectorAll('[data-metric]:not([data-metric=""])').forEach(el=>{const k=el.dataset.metric;if(!['downloadPercent','downloadSpeed','downloadTotal','downloadLoaded'].includes(k))return;if(el.dataset.kind==='ring'){const pct=dl.total?Math.min(100,100*dl.loaded/dl.total):(dl.state==='done'?100:0);el.style.setProperty('--ring-pct',pct+'%');(el.querySelector('.ring-value')||el).textContent=Math.round(pct)+'%'}else{const n=el.querySelector('.value');if(n)n.textContent=metric(k);else el.textContent=metric(k)}})}
 function clamp(n,min,max){n=Number(n);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):min}
 function fillBackground(scene){
  const bg=scene.scene_data,el=$('scene'),outer=$('sceneBackdrop');
@@ -357,8 +359,8 @@ function fillBackground(scene){
  const c=(bg.components||[]).find(x=>(x.kind||x.type)==='background'&&x.visible!==false);
  if(!c?.src||!allowAssetUrl(c.src))return;
  const shade=clamp(c.backgroundShade||0,0,.8);
- // 100% 100% deforms photos; retain proportions instead.
- const fit=c.backgroundFit==='contain'?'contain':'cover';
+ // Respect the background sizing published by the manager (including intentional stretching).
+ const fit=['cover','contain','100% 100%'].includes(c.backgroundFit)?c.backgroundFit:'cover';
  const pos=['center','top','bottom','left','right'].includes(c.backgroundPosition)?c.backgroundPosition:'center';
  const paint=(u)=>{
   const shadeLayer=`linear-gradient(rgba(3,10,24,${shade}),rgba(3,10,24,${shade}))`;
@@ -375,7 +377,7 @@ function fillBackground(scene){
 function appendImage(target,url,fit='contain',onLoaded){const im=document.createElement('img');im.alt='';im.loading='eager';im.decoding='async';im.draggable=false;im.style.objectFit=fit;if(onLoaded)im.addEventListener('load',()=>onLoaded(im),{once:true});target.append(im);if(allowAssetUrl(url)){im.src=directAsset(url);if(!imageObjectUrls.has(url)&&!thumbnailUrls.has(url))resolveAsset(url).then(u=>{if(u&&im.isConnected&&im.src!==u)im.src=u})}return im}
 function fitText(){const wrap=$('scene');const scale=clamp(Math.min(wrap.clientWidth/390,wrap.clientHeight/844),.72,2.55);for(const e of wrap.querySelectorAll('.layer')){const kind=e.dataset.kind;const base=Number(e.dataset.baseSize)||12;if(['avatar','social','ring','decor','progress'].includes(kind))continue;let size=Math.max(7,base*scale);e.style.fontSize=size+'px';if(['input','toggle'].includes(kind))continue;for(let i=0;i<14&&(e.scrollHeight>e.clientHeight+2||e.scrollWidth>e.clientWidth+2);i++){size=Math.max(6.5,size-.5);e.style.fontSize=size+'px'}}}
 function fitAvatarFrame(box,img,origin){if(!img.naturalWidth||!img.naturalHeight)return;const stage=$('scene');if(!stage.clientWidth||!stage.clientHeight)return;const ow=origin.width,oh=origin.height;const widthPx=ow/100*stage.clientWidth,heightPx=oh/100*stage.clientHeight;const ratio=img.naturalWidth/img.naturalHeight;let w=heightPx*ratio,h=heightPx;if(w>widthPx){w=widthPx;h=widthPx/ratio}const originalL=Number(origin.x)/100*stage.clientWidth,originalT=Number(origin.y)/100*stage.clientHeight;box.style.width=100*w/stage.clientWidth+'%';box.style.height=100*h/stage.clientHeight+'%';box.style.left=100*(originalL+(widthPx-w)/2)/stage.clientWidth+'%';box.style.top=100*(originalT+(heightPx-h)/2)/stage.clientHeight+'%'}
-function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return null;const e=document.createElement('div');const kind=String(c.kind||c.type||'panel');e.className='layer';e.dataset.kind=kind;e.dataset.baseSize=c.fontSize||12;e.dataset.metric=c.metricKey||'';e.dataset.variant=c.variant||'glass';e.dataset.motion=c.motion||'';e.dataset.fieldRole=c.fieldRole||'';e.dataset.action=c.action||'';
+function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return null;const e=document.createElement('div');const kind=String(c.kind||c.type||'panel');e.className='layer';e.dataset.kind=kind;e.dataset.baseSize=c.fontSize||12;if(c.metricKey)e.dataset.metric=c.metricKey;e.dataset.variant=c.variant||'glass';e.dataset.motion=c.motion||'';e.dataset.fieldRole=c.fieldRole||'';e.dataset.action=c.action||'';
  e.style.left=clamp(c.x,0,100)+'%';e.style.top=clamp(c.y,0,100)+'%';e.style.width=clamp(c.width,1,100)+'%';e.style.height=clamp(c.height,0.2,100)+'%';e.style.borderRadius=clamp(c.radius??10,0,999)+'px';e.style.color=c.color||'#f9e6c4';e.style.opacity=c.opacity??1;e.style.fontWeight=c.fontWeight||'';e.style.textAlign=c.textAlign||'center';e.style.fontSize=Math.max(7,(Number(c.fontSize)||12)*clamp(Math.min($('scene').clientWidth/390,$('scene').clientHeight/844),.72,2.55))+'px';
  if(kind==='panel'||kind==='card'){if(c.text)e.textContent=visibleText(c.text);return e}if(kind==='decor')return e;
  if(['text','label','heading'].includes(kind)){if(c.metricKey){e.classList.add('metric');if(c.compactMetric){const lbl=document.createElement('span');lbl.className='label';lbl.textContent=visibleText(c.metricLabel||'');const val=document.createElement('strong');val.className='value';val.textContent=metric(c.metricKey);e.append(lbl,val)}else e.textContent=metric(c.metricKey)}else e.textContent=visibleText(c.text||'');return e}

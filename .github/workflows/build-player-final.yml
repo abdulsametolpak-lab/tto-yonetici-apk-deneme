@@ -1,4 +1,4 @@
-name: TTO Oyuncu 1.7 Android APK
+name: TTO Oyuncu 1.8 Android APK
 
 on:
   workflow_dispatch:
@@ -104,8 +104,8 @@ jobs:
           """)
           gradle=Path('player-android/android/app/build.gradle')
           g=gradle.read_text()
-          g=g.replace('versionCode 1', 'versionCode 17',1)
-          g=g.replace('versionName "1.0"', 'versionName "1.7.0"',1)
+          g=g.replace('versionCode 1', 'versionCode 18',1)
+          g=g.replace('versionName "1.0"', 'versionName "1.8.0"',1)
           gradle.write_text(g)
           print('Portrait, fullscreen and version settings done.')
           PY
@@ -121,15 +121,15 @@ jobs:
         run: |
           set -euo pipefail
           test -s player-android/android/app/build/outputs/apk/debug/app-debug.apk
-          cp player-android/android/app/build/outputs/apk/debug/app-debug.apk TTO-Oyuncu-v1.7.0.apk
-          sha256sum TTO-Oyuncu-v1.7.0.apk
-          ls -lh TTO-Oyuncu-v1.7.0.apk
+          cp player-android/android/app/build/outputs/apk/debug/app-debug.apk TTO-Oyuncu-v1.8.0.apk
+          sha256sum TTO-Oyuncu-v1.8.0.apk
+          ls -lh TTO-Oyuncu-v1.8.0.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TTO-Oyuncu-v1.7.0-APK
-          path: TTO-Oyuncu-v1.7.0.apk
+          name: TTO-Oyuncu-v1.8.0-APK
+          path: TTO-Oyuncu-v1.8.0.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -138,12 +138,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG=tto-oyuncu-v1.7.0
+          TAG=tto-oyuncu-v1.8.0
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" TTO-Oyuncu-v1.7.0.apk --clobber
+            gh release upload "$TAG" TTO-Oyuncu-v1.8.0.apk --clobber
           else
-            gh release create "$TAG" TTO-Oyuncu-v1.7.0.apk \
+            gh release create "$TAG" TTO-Oyuncu-v1.8.0.apk \
               --target "$GITHUB_SHA" \
-              --title "TTO Oyuncu 1.7.0 - Android APK" \
+              --title "TTO Oyuncu 1.8.0 - Android APK" \
               --notes "Kurulabilir Android APK. Capacitor 8; tam ekran ve dikey. Karşılama ve yükleme görselleri APK içinde. Yeni sahneler uyumluysa uzaktan güncellenir. Bu APK debug imzalıdır; Google Play üretim imzası değildir."
           fi
