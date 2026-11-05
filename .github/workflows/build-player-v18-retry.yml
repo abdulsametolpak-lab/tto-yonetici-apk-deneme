@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - 'player-android/**'
-      - '' .github/workflows/build-player-v18-retry.yml'
+      - '.github/workflows/build-player-v18-retry.yml'
 
 permissions:
   contents: write
