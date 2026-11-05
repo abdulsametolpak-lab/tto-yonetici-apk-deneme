@@ -1,0 +1,13 @@
+name: TTO Android Build Healthcheck
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tto-actions-healthcheck.yml'
+  workflow_dispatch:
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check runner
+        run: echo "TTO GitHub Actions runner is available"
