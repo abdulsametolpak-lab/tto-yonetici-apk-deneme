@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#07121d">
-<title>Türkiye Ticaret Online · Oyuncu v1.9</title>
+<title>Türkiye Ticaret Online · Oyuncu APK v2.0</title>
 <style>
 :root{color-scheme:dark;--gold:#e4be7e;--cream:#fff0ce;--blue:#89aac7;--surface:#091a2c;--ease:cubic-bezier(.2,.7,.2,1)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040b12;color:var(--cream);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.52;cursor:wait}
@@ -185,7 +185,7 @@ body{display:block!important;background:#06101c!important}
 'use strict';
 (()=>{
 /* TTO shared player engine contract v1.7 — identical in Yönetici/Oyuncu. */
-const TTO_ENGINE_VERSION='1.9.0';
+const TTO_ENGINE_VERSION='2.0.0';
 const TTO_SUPPORTED_KINDS=new Set(['background','panel','card','decor','text','label','heading','button','input','select','date','slider','toggle','checkbox','radio','progress','ring','stat','avatar','image','social']);
 const TTO_SUPPORTED_ACTIONS=new Set(['none','message','page','toggle','counter','link','social-link','auth-login-preview','auth-register-preview']);
 const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1','scene.background.pan.v1']);
@@ -247,7 +247,7 @@ function ttoAuditSceneBundle(input){
  const unique=a=>[...new Set(a)];
  return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
 }
-const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'1.9.0'});
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.0.0'});
 const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
 const DESIGN_W=390,DESIGN_H=844;
 function updateStageFit(){
@@ -257,7 +257,7 @@ function updateStageFit(){
  viewport.style.setProperty('--tto-uniform-scale','1');
 }
 
-const MAIN=['Karşılama','Yükleme','Giriş','Kayıt'];const BOOTSTRAP=JSON.parse($('builtInScenes').textContent);
+const MAIN=['Karşılama','Yükleme','Giriş','Kayıt','Anasayfa','Ana Menü'];const BOOTSTRAP=JSON.parse($('builtInScenes').textContent);
 const KEY='tto_player_scene_cache_v1',IDB='tto_player_offline_v1';let db=null,bundle=null,current='',moving=false,autoTimer=0,noticeTimer=0,updateRunning=false;
 let lastCompatibilityReport={ok:true,requiresApk:false,blocking:[],warnings:[]};const uiValues=new Map();let avatarPick={gender:'',url:''};let avatars={erkek:[],kadin:[]};const inputValues={username:'',email:'',password:'',passwordConfirm:'',rememberMe:false};
 
@@ -284,12 +284,17 @@ async function restoreSession(){
  }catch(e){console.warn('TTO oturum doğrulama:',e);forgetSession();return false}
 }
 function authBusy(b){auth.working=b;for(const btn of $('scene').querySelectorAll('.layer[data-kind="button"]')){if(/auth-(?:login|register)-preview/.test(btn.dataset.action||'')){btn.style.pointerEvents=b?'none':'';btn.style.opacity=b?'.64':''}}}
+function gameHome(){
+  return getScene('Anasayfa')||getScene('Ana Menü')||bundle?.scenes?.find(row=>/^(?:ana\s*sayfa|ana\s*menü)$/iu.test(String(row.page_name||'').trim()))||null;
+}
 function showPlayerHome(){
+  const publishedHome=gameHome();
+  if(publishedHome){hidePlayerHome();goTo(publishedHome.page_name,true);return}
  $('playerHome').hidden=false;
  const meta=auth.user?.user_metadata||{};const name=String(meta.username||auth.user?.email?.split('@')[0]||'Oyuncu').slice(0,45);
  $('playerGreeting').textContent='HOŞ GELDİN, '+name.toLocaleUpperCase('tr-TR');
  const image=$('playerAvatar');image.replaceChildren();if(allowAssetUrl(meta.avatar_url)){appendImage(image,meta.avatar_url,'cover')}else image.textContent='◆';
- const menu=getScene('Ana Menü');$('enterGameBtn').hidden=!menu;
+ const menu=gameHome();$('enterGameBtn').hidden=!menu;
  $('homeInfo').textContent=menu?'Oyun dünyan hazır. Devam etmek için dokun.':'Hesabınla giriş yaptın. Oyun ana menüsü henüz Yönetici üzerinden yayınlanmadı. Yeni sahneler yayınlandığında arka planda alınacak.';
 }
 function hidePlayerHome(){$('playerHome').hidden=true}
@@ -421,11 +426,13 @@ function fillBackground(scene){
   el.style.backgroundRepeat='no-repeat';
   if(outer){outer.style.backgroundImage=`linear-gradient(rgba(4,12,24,.23),rgba(4,12,24,.23)),url("${u}")`;outer.style.backgroundSize='cover';outer.style.backgroundPosition='center';outer.style.backgroundRepeat='no-repeat'}
  };
- paint(directAsset(c.src));
+ // Never start a remote image request before checking the persistent cache.
+ const instant=TTO_EMBEDDED_BACKGROUND[c.src]||imageObjectUrls.get(c.src);
+ if(instant)paint(instant);
  resolveAsset(c.src).then(u=>{if(el.dataset.pageKey===scene.page_key&&u)paint(u)})
 }
 
-function appendImage(target,url,fit='contain',onLoaded){const im=document.createElement('img');im.alt='';im.loading='eager';im.decoding='async';im.draggable=false;im.style.objectFit=fit;if(onLoaded)im.addEventListener('load',()=>onLoaded(im),{once:true});target.append(im);if(allowAssetUrl(url)){im.src=directAsset(url);if(!imageObjectUrls.has(url)&&!thumbnailUrls.has(url))resolveAsset(url).then(u=>{if(u&&im.isConnected&&im.src!==u)im.src=u})}return im}
+function appendImage(target,url,fit='contain',onLoaded){const im=document.createElement('img');im.alt='';im.loading='eager';im.decoding='async';im.draggable=false;im.style.objectFit=fit;if(onLoaded)im.addEventListener('load',()=>onLoaded(im),{once:true});target.append(im);if(allowAssetUrl(url)){const immediate=TTO_EMBEDDED_BACKGROUND[url]||thumbnailUrls.get(url)||imageObjectUrls.get(url);if(immediate)im.src=immediate;else resolveAsset(url).then(u=>{if(u&&im.isConnected&&im.src!==u)im.src=u})}return im}
 function fitText(){const wrap=$('scene');const scale=clamp(Math.min(wrap.clientWidth/390,wrap.clientHeight/844),.72,2.55);for(const e of wrap.querySelectorAll('.layer')){const kind=e.dataset.kind;const base=Number(e.dataset.baseSize)||12;if(['avatar','social','ring','decor','progress'].includes(kind))continue;let size=Math.max(7,base*scale);e.style.fontSize=size+'px';if(['input','toggle'].includes(kind))continue;for(let i=0;i<14&&(e.scrollHeight>e.clientHeight+2||e.scrollWidth>e.clientWidth+2);i++){size=Math.max(6.5,size-.5);e.style.fontSize=size+'px'}}}
 function fitAvatarFrame(box,img,origin){if(!img.naturalWidth||!img.naturalHeight)return;const stage=$('scene');if(!stage.clientWidth||!stage.clientHeight)return;const ow=origin.width,oh=origin.height;const widthPx=ow/100*stage.clientWidth,heightPx=oh/100*stage.clientHeight;const ratio=img.naturalWidth/img.naturalHeight;let w=heightPx*ratio,h=heightPx;if(w>widthPx){w=widthPx;h=widthPx/ratio}const originalL=Number(origin.x)/100*stage.clientWidth,originalT=Number(origin.y)/100*stage.clientHeight;box.style.width=100*w/stage.clientWidth+'%';box.style.height=100*h/stage.clientHeight+'%';box.style.left=100*(originalL+(widthPx-w)/2)/stage.clientWidth+'%';box.style.top=100*(originalT+(heightPx-h)/2)/stage.clientHeight+'%'}
 function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return null;const e=document.createElement('div');const kind=String(c.kind||c.type||'panel');e.className='layer';e.dataset.kind=kind;e.dataset.baseSize=c.fontSize||12;if(c.metricKey)e.dataset.metric=c.metricKey;e.dataset.variant=c.variant||'glass';e.dataset.motion=c.motion||'';e.dataset.fieldRole=c.fieldRole||'';e.dataset.action=c.action||'';
@@ -554,28 +561,23 @@ async function decodeThumbs(gallery){
 async function readAsset(url,sizeHint=0,ctx){
  const old=await cachedBlob(url);
  if(old){if(!imageObjectUrls.has(url))imageObjectUrls.set(url,URL.createObjectURL(old));await makeThumb(url,old);return old.size}
- const ctrl=new AbortController();
- // Only the individual request times out; the entire loading stage never skips unfinished assets.
+ const ctrl=new AbortController(),track=Boolean(ctx.foreground);
  const timer=setTimeout(()=>ctrl.abort(),45000);
  try{
   const response=await fetch(url,{cache:'no-store',signal:ctrl.signal});
   if(!response.ok)throw Error('Görsel alınamadı: '+response.status+' '+url.split('/').pop());
   const declared=Number(response.headers.get('content-length'))||sizeHint||0;
-  if(declared&&!sizeHint){dl.total+=declared;patchMetrics()}
+  if(track&&declared&&!sizeHint){dl.total+=declared;patchMetrics()}
   const chunks=[];let bytes=0;
   if(response.body?.getReader){
     const reader=response.body.getReader();
     while(true){const {done,value}=await reader.read();if(done)break;chunks.push(value);bytes+=value.byteLength;ctx.network+=value.byteLength;
-       // When a server doesn't reveal content length, add bytes to total alongside loaded.
-       if(!declared)dl.total+=value.byteLength;
-       dl.loaded=ctx.completed+bytes;
-       dl.speed=ctx.network/Math.max((performance.now()-ctx.started)/1000,.2);
-       patchMetrics();
+       if(track){if(!declared)dl.total+=value.byteLength;
+       dl.loaded=ctx.completed+bytes;dl.speed=ctx.network/Math.max((performance.now()-ctx.started)/1000,.2);patchMetrics()}
     }
   }else{
     const buffer=await response.arrayBuffer();chunks.push(buffer);bytes=buffer.byteLength;ctx.network+=bytes;
-    if(!declared)dl.total+=bytes;
-    dl.loaded=ctx.completed+bytes;dl.speed=ctx.network/Math.max((performance.now()-ctx.started)/1000,.2);patchMetrics();
+    if(track){if(!declared)dl.total+=bytes;dl.loaded=ctx.completed+bytes;dl.speed=ctx.network/Math.max((performance.now()-ctx.started)/1000,.2);patchMetrics()}
   }
   const blob=new Blob(chunks,{type:response.headers.get('content-type')||'image/png'});
   if(!blob.size)throw Error('Boş görsel: '+url.split('/').pop());
@@ -586,38 +588,52 @@ async function readAsset(url,sizeHint=0,ctx){
   return blob.size;
  }finally{clearTimeout(timer)}
 }
+async function newFileLength(url){
+ // HEAD only reads headers, not the image body. This establishes the download-only total.
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7500);
+ try{const r=await fetch(url,{method:'HEAD',cache:'no-store',signal:ctrl.signal});if(!r.ok)return 0;
+   const n=Number(r.headers.get('content-length')||0);return Number.isFinite(n)&&n>0?n:0;
+ }catch(_){return 0}finally{clearTimeout(timer)}
+}
 let storageWarning=false;
 async function prefetchAssets(b,required=true,gallery=avatars,foreground=true){
- const urls=assetSources(b,gallery);const sizes=new Map();for(const a of [...gallery.erkek,...gallery.kadin])if(a.size>0)sizes.set(a.url,a.size);
- const ctx={network:0,started:performance.now(),completed:0};
- if(foreground){dl.loaded=0;dl.total=[...sizes.values()].reduce((a,v)=>a+v,0);dl.speed=0;dl.fileCount=urls.length;dl.state='downloading';patchMetrics()}
- // Single download worker avoids inflated progress numbers, spikes in Android RAM and duplicate fetches.
- for(let i=0;i<urls.length;i++){
-  const url=urls[i];
-  if(foreground)loadingLabel('Oyun dosyaları hazırlanıyor…',`${i+1} / ${urls.length} dosya · ${fmtBytes(dl.loaded)} yüklendi`);
+ const urls=assetSources(b,gallery),sizes=new Map();
+ for(const a of [...gallery.erkek,...gallery.kadin])if(a.size>0)sizes.set(a.url,a.size);
+ // Critical: build a delta, not a summary of every image used by the game.
+ const cached=[],missing=[];
+ for(const url of urls){const blob=await cachedBlob(url);if(blob)cached.push({url,blob});else missing.push(url)}
+ const ctx={network:0,started:performance.now(),completed:0,foreground};
+ if(foreground){
+   dl.loaded=0;dl.total=0;dl.speed=0;dl.fileCount=missing.length;dl.state='downloading';patchMetrics();
+   // Avatar sizes are in the Storage catalog; HEAD other images to know their size.
+   for(const url of missing)if(!sizes.get(url)){const n=await newFileLength(url);if(n)sizes.set(url,n)}
+   dl.total=missing.reduce((sum,url)=>sum+Number(sizes.get(url)||0),0);
+   patchMetrics();
+ }
+ // Already downloaded means zero network bytes. Reuse the local Blob/thumbnail.
+ for(const {url,blob} of cached){
+   if(!imageObjectUrls.has(url))imageObjectUrls.set(url,URL.createObjectURL(blob));
+   await makeThumb(url,blob);
+ }
+ for(let i=0;i<missing.length;i++){
+  const url=missing[i],hint=Number(sizes.get(url)||0);
   try{
-   const known=Number(sizes.get(url)||0);
-   const blob=await cachedBlob(url);
-   if(blob){if(foreground){if(!known)dl.total+=blob.size;dl.loaded+=blob.size;patchMetrics()}
-       if(!imageObjectUrls.has(url))imageObjectUrls.set(url,URL.createObjectURL(blob));await makeThumb(url,blob);}
-   else{
-     // Update downloads are silent and must never mutate the current screen's loading metrics.
-     if(!foreground){const temp={...dl};try{await readAsset(url,known,ctx)}finally{Object.assign(dl,temp)}}
-     else{const prev=ctx.completed;ctx.completed=dl.loaded;const n=await readAsset(url,known,ctx);dl.loaded=ctx.completed+n;
-        if(known&&n!==known)dl.total+=(n-known);
-        ctx.completed=dl.loaded;patchMetrics()}
-   }
+   ctx.completed=foreground?dl.loaded:ctx.completed;
+   const n=await readAsset(url,hint,ctx);
+   if(foreground){dl.loaded=ctx.completed+n;
+     if(hint&&n!==hint)dl.total+=n-hint;
+     ctx.completed=dl.loaded;patchMetrics()}
   }catch(err){console.warn('Dosya hazırlama başarısız:',url,err);if(required)throw err}
  }
  await decodeThumbs(gallery);
- if(foreground){dl.loaded=dl.total;dl.speed=0;dl.state='done';patchMetrics();}
+ if(foreground){dl.loaded=dl.total;dl.speed=0;dl.state='done';patchMetrics()}
  return true;
 }
 function validateResponse(rows){if(!Array.isArray(rows)||rows.length===0||rows.length>150)throw Error('Yayın listesi geçerli değil');const pack={schema:'tto_player_scene_bundle_v1',scenes:rows.filter(r=>r&&r.page_key&&r.page_name&&r.scene_data&&Array.isArray(r.scene_data.components))};for(const core of ['Karşılama','Yükleme']){if(!pack.scenes.some(x=>x.page_name===core)){const embedded=BOOTSTRAP.scenes.find(x=>x.page_name===core);if(embedded)pack.scenes.unshift(clone(embedded))}}if(!validBundle(pack))throw Error('Yayın paketi hatalı');return pack}
 async function retrievePublished(){const url=CONFIG.url+'/rest/v1/'+CONFIG.table+'?select=page_key,page_name,draft_key,published_at,scene_data&order=published_at.desc';const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),13000);try{const res=await fetch(url,{headers:{apikey:CONFIG.key,Accept:'application/json'},cache:'no-store',signal:ctrl.signal});if(!res.ok)throw Error('Yayın denetimi: '+res.status);return validateResponse(await res.json())}finally{clearTimeout(timer)}}
 async function stageUpdate(pack,knownManifest=null){
  lastCompatibilityReport=ttoAuditSceneBundle(pack);if(!lastCompatibilityReport.ok)throw Error((lastCompatibilityReport.requiresApk?'Uygulama güncellemesi gerekiyor: ':'Yeni sahne verisi/bağlantısı geçersiz: ')+lastCompatibilityReport.blocking.join('; '));
- if(!db){setStatus('Kalıcı önbellek kapalı · yeni sürüm sonraki açılışta indirilecek','warn');return}
+ if(!db){setStatus('Kalıcı önbellek kullanılamıyor · yeni içerikler sonraki açılışta alınacak','warn');return}
  const manifest=knownManifest||await fetchGallerySnapshot({allowOffline:false});
  setStatus('Yeni sürüm ve avatarlar arka planda hazırlanıyor…','idle');
  storageWarning=false;
@@ -685,10 +701,10 @@ async function finishBoot(){
    // Wait rather than silently ignoring the login transition while moving=true.
    while(moving)await sleep(80);
    const hasAuth=await bootAuthPromise;
-   if(hasAuth){if(getScene('Ana Menü'))goTo('Ana Menü',true);else{goTo('Giriş',true);showPlayerHome()}}
+   if(hasAuth){const target=gameHome();if(target){hidePlayerHome();goTo(target.page_name,true)}else{goTo('Giriş',true);showPlayerHome()}}
    else{goTo(getScene('Giriş')?'Giriş':bundle.scenes.find(x=>!['Karşılama','Yükleme'].includes(x.page_name))?.page_name||homeName(),true)}
    startBackgroundChecks();
-   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,status:()=>({...dl}),getAuth:()=>!!auth.active,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
+   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),getHome:()=>gameHome()?.page_name||null,goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,status:()=>({...dl}),getAuth:()=>!!auth.active,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
  }catch(err){
    console.warn('TTO: eksik dosyayla girişe izin verilmedi:',err);
    dl.state='error';dl.speed=0;patchMetrics();
@@ -710,7 +726,7 @@ async function start(){
 }
 $('retryLoad').onclick=()=>void finishBoot();
 $('sceneMenuBtn').onclick=()=>{};$('closeMenu').onclick=closeMenu;$('closeAvatar').onclick=closeAvatar;$('nextButton').onclick=nextScene;
-$('logoutBtn').onclick=()=>void doLogout();$('enterGameBtn').onclick=()=>{hidePlayerHome();if(getScene('Ana Menü'))goTo('Ana Menü')};
+$('logoutBtn').onclick=()=>void doLogout();$('enterGameBtn').onclick=()=>{hidePlayerHome();const menu=gameHome();if(menu)goTo(menu.page_name)};
 window.addEventListener('resize',()=>{if(!document.activeElement?.classList?.contains('scene-input'))updateStageFit();fitText();/* Keep focused form controls mounted while Android keyboard changes viewport size. */});
 window.TTOEngineAudit={check:ttoAuditSceneBundle,version:TTO_ENGINE_VERSION,supportedKinds:[...TTO_SUPPORTED_KINDS],supportedActions:[...TTO_SUPPORTED_ACTIONS],supportedCapabilities:[...TTO_SUPPORTED_CAPABILITIES]};
 start();
