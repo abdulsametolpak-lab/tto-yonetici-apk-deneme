@@ -157,6 +157,10 @@ body{display:block!important;background:#06101c!important}
 #loadGate.error #loadGateLabel{color:#ffd2c9}
 #avatarGrid .thumb img{position:absolute!important;inset:3px!important;width:calc(100% - 6px)!important;height:calc(100% - 6px)!important;object-fit:contain!important;object-position:center!important;max-width:none;max-height:none}
 
+/* v2.2 profile avatar button: only the signed-in user's own avatar */
+.layer.player-avatar-button{display:grid!important;place-items:center!important;overflow:hidden!important;padding:0!important;background-image:none!important;}
+.layer.player-avatar-button img{display:block;width:100%;height:100%;max-height:100%;max-width:100%;object-fit:contain!important;object-position:center;pointer-events:none;user-select:none;}
+.layer .player-avatar-blank{display:block;width:47%;height:58%;max-width:54px;max-height:70px;background:linear-gradient(#e9c891,#c18b4b);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M3 21v-2a9 9 0 0 1 18 0v2z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M3 21v-2a9 9 0 0 1 18 0v2z'/%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -185,10 +189,10 @@ body{display:block!important;background:#06101c!important}
 'use strict';
 (()=>{
 /* TTO shared player engine contract v1.7 — identical in Yönetici/Oyuncu. */
-const TTO_ENGINE_VERSION='2.1.0';
+const TTO_ENGINE_VERSION='2.2.0';
 const TTO_SUPPORTED_KINDS=new Set(['background','panel','card','decor','text','label','heading','button','input','select','date','slider','toggle','checkbox','radio','progress','ring','stat','avatar','image','social']);
 const TTO_SUPPORTED_ACTIONS=new Set(['none','message','page','toggle','counter','link','social-link','auth-login-preview','auth-register-preview']);
-const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1','scene.background.pan.v1','scene.update.live.v1']);
+const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1','scene.background.pan.v1','scene.update.live.v1','profile.avatar.button.v1']);
 // A game mechanic is not supported simply because its visual controls can be rendered.
 const TTO_SUPPORTED_GAME_MECHANICS=new Set([]);
 const TTO_ANDROID_PERMISSIONS=new Set([]);
@@ -233,6 +237,8 @@ function ttoAuditSceneBundle(input){
     const w=Number(c.backgroundWidthPercent??200),p=Number(c.backgroundStartPercent??50),speed=Number(c.backgroundScrollSensitivity??1);
     if(!Number.isFinite(w)||w<200||w>600||!Number.isFinite(p)||p<0||p>100||!Number.isFinite(speed)||speed<.25||speed>3) add('content',name+' — panorama genişliği, başlangıç konumu veya hassasiyeti geçersiz');
    }
+   if(c.imageSource==='playerAvatar'&&kind!=='button')add('content',name+' — oyuncu avatarı yalnızca butona bağlanabilir');
+   if(c.imageSource&&!['playerAvatar'].includes(c.imageSource))add('engine',name+' — bilinmeyen görsel kaynağı: '+c.imageSource);
    if(!TTO_SUPPORTED_KINDS.has(kind))add('engine',name+' — desteklenmeyen UI elemanı: '+(kind||'(tür yok)')+' ('+label+')');
    if(!TTO_SUPPORTED_ACTIONS.has(action))add('engine',name+' — desteklenmeyen eylem: '+action+' ('+label+')');
    if(c.id){if(seenElements.has(c.id))warnings.push(name+' — aynı kimlikle birden fazla UI elemanı: '+c.id);seenElements.add(c.id)}
@@ -247,7 +253,7 @@ function ttoAuditSceneBundle(input){
  const unique=a=>[...new Set(a)];
  return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
 }
-const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.1.0'});
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.2.0'});
 const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
 const DESIGN_W=390,DESIGN_H=844;
 function updateStageFit(){
@@ -264,6 +270,42 @@ let lastCompatibilityReport={ok:true,requiresApk:false,blocking:[],warnings:[]};
 const SESSION_KEY=KEY+'_auth';
 const auth={session:null,user:null,active:false,working:false};
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function verifiedProfileAvatarUrl(src){
+ if(!src||!allowAssetUrl(src))return '';
+ try{
+  const u=new URL(src);
+  const path=u.pathname;
+  return /^\/storage\/v1\/object\/public\/tto-ui-assets\/ui\/avatars\/(?:erkek|kadin)\/[^/]+\.(?:png|jpe?g|webp)$/i.test(path)?u.href:'';
+ }catch(_){return ''}
+}
+function activePlayerAvatarUrl(){
+ // Never reuse the device-wide registration selection across unrelated accounts.
+ return auth.active?verifiedProfileAvatarUrl(auth.user?.user_metadata?.avatar_url||''):'';
+}
+function refreshProfileAvatarButtons(){
+ const url=activePlayerAvatarUrl();
+ for(const box of $('scene').querySelectorAll('.layer[data-avatar-binding="playerAvatar"]')){
+  box.replaceChildren();
+  if(url)appendImage(box,url,'contain');
+  else{const mark=document.createElement('span');mark.className='player-avatar-blank';mark.setAttribute('aria-hidden','true');box.append(mark);}
+ }
+}
+async function hydrateProfileAvatar(){
+ const userId=auth.user?.id,token=auth.session?.access_token;
+ if(!auth.active||!userId||!token||activePlayerAvatarUrl())return;
+ try{
+  const url=CONFIG.url+'/rest/v1/tto_players?select=avatar_url,avatar_gender&auth_user_id=eq.'+encodeURIComponent(userId)+'&limit=1';
+  const res=await fetch(url,{headers:{apikey:CONFIG.key,Authorization:'Bearer '+token,Accept:'application/json'},cache:'no-store'});
+  if(!res.ok||!auth.active||auth.user?.id!==userId)return;
+  const rows=await res.json();const avatar=verifiedProfileAvatarUrl(rows?.[0]?.avatar_url);
+  if(!avatar||!auth.active||auth.user?.id!==userId)return;
+  auth.user={...auth.user,user_metadata:{...(auth.user.user_metadata||{}),avatar_url:avatar,avatar_gender:rows[0].avatar_gender||''}};
+  if(auth.session)auth.session.user=auth.user;
+  const storage=fromStore(localStorage,SESSION_KEY)?localStorage:sessionStorage;
+  try{if(auth.session)storage.setItem(SESSION_KEY,JSON.stringify(auth.session))}catch(_){}
+  refreshProfileAvatarButtons();
+ }catch(err){console.warn('Profil avatarı getirilemedi',err)}
+}
 const validEmail=x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(x||''));
 const fromStore=(store,key)=>{try{return JSON.parse(store.getItem(key)||'null')}catch(_){return null}};
 function forgetSession(){try{localStorage.removeItem(SESSION_KEY)}catch(_){}try{sessionStorage.removeItem(SESSION_KEY)}catch(_){}auth.session=null;auth.user=null;auth.active=false}
@@ -280,7 +322,7 @@ async function restoreSession(){
  let keep=!!fromStore(localStorage,SESSION_KEY);
  try{
    if(!saved.access_token||!saved.expires_at||saved.expires_at<Date.now()/1000+90){const refresh=await authFetch('token?grant_type=refresh_token','POST',{refresh_token:saved.refresh_token});persistSession(refresh,keep)}else {auth.session=saved;auth.user=saved.user;auth.active=true}
-   const me=await authFetch('user','GET',null,auth.session.access_token);auth.user=me;if(auth.session)auth.session.user=me;return true;
+   const me=await authFetch('user','GET',null,auth.session.access_token);auth.user=me;if(auth.session)auth.session.user=me;void hydrateProfileAvatar();return true;
  }catch(e){console.warn('TTO oturum doğrulama:',e);forgetSession();return false}
 }
 function authBusy(b){auth.working=b;for(const btn of $('scene').querySelectorAll('.layer[data-kind="button"]')){if(/auth-(?:login|register)-preview/.test(btn.dataset.action||'')){btn.style.pointerEvents=b?'none':'';btn.style.opacity=b?'.64':''}}}
@@ -307,7 +349,7 @@ async function doLogin(){
  authBusy(true);
  try{
    const session=await authFetch('token?grant_type=password','POST',{email,password});
-   persistSession(session,!!inputValues.rememberMe);if(inputValues.rememberMe)writeLocal('rememberEmail',email);else try{localStorage.removeItem(KEY+'_rememberEmail')}catch(_){}
+   persistSession(session,!!inputValues.rememberMe);void hydrateProfileAvatar();if(inputValues.rememberMe)writeLocal('rememberEmail',email);else try{localStorage.removeItem(KEY+'_rememberEmail')}catch(_){}
    inputValues.password='';inputValues.passwordConfirm='';enterPublishedHome();
  }catch(e){note(/invalid login credentials/i.test(e.message)?'E-posta veya şifre hatalı.':e.message,6500)}finally{authBusy(false)}
 }
@@ -323,7 +365,7 @@ async function doRegister(){
    const payload={email,password,data:{username,avatar_url:avatarPick.url,avatar_gender:avatarPick.gender}};
    const result=await authFetch('signup','POST',payload);
    inputValues.password='';inputValues.passwordConfirm='';
-   if(result.access_token&&result.refresh_token){persistSession({...result,user:{...(result.user||{}),user_metadata:{...(result.user?.user_metadata||{}),username,avatar_url:avatarPick.url,avatar_gender:avatarPick.gender}}},!!inputValues.rememberMe);enterPublishedHome();note('Kayıt başarıyla tamamlandı.')}
+   if(result.access_token&&result.refresh_token){persistSession({...result,user:{...(result.user||{}),user_metadata:{...(result.user?.user_metadata||{}),username,avatar_url:avatarPick.url,avatar_gender:avatarPick.gender}}},!!inputValues.rememberMe);void hydrateProfileAvatar();enterPublishedHome();note('Kayıt başarıyla tamamlandı.')}
    else{goTo('Giriş');note('Kayıt alındı. E-posta doğrulaması gerekiyorsa gelen kutunu kontrol et.',7000)}
  }catch(e){note(e.message,6500)}finally{authBusy(false)}
 }
@@ -482,7 +524,7 @@ function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return nu
   e.style.width=side+'px';e.style.height=side+'px';
   e.setAttribute('role','button');e.tabIndex=0;e.setAttribute('aria-label',(c.socialPlatform||'Sosyal')+' bağlantısı');appendImage(e,c.src,'contain');e.onclick=()=>{const url=safeLink(c.target);if(url)window.open(url,'_blank','noopener,noreferrer');else note('Bu sosyal medya butonuna henüz bağlantı atanmamış.')};e.onkeydown=ev=>{if(ev.key==='Enter')e.click()};return e}
  if(kind==='image'){appendImage(e,c.src,'cover');return e}
- if(kind==='button'){e.setAttribute('role','button');e.tabIndex=0;e.textContent=visibleText(c.text||'');e.onclick=()=>handleButton(c,scene);e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();e.click()}};return e}
+ if(kind==='button'){e.setAttribute('role','button');e.tabIndex=0;if(c.imageSource==='playerAvatar'){e.dataset.avatarBinding='playerAvatar';e.classList.add('player-avatar-button');e.setAttribute('aria-label','Oyuncu profil avatarı');const imageUrl=activePlayerAvatarUrl();if(imageUrl)appendImage(e,imageUrl,'contain');else{const placeholder=document.createElement('span');placeholder.className='player-avatar-blank';placeholder.setAttribute('aria-hidden','true');e.append(placeholder)}}else e.textContent=visibleText(c.text||'');e.onclick=()=>handleButton(c,scene);e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();e.click()}};return e}
  e.textContent=visibleText(c.text||'');return e}
 function renderScene(row){if(!row)return;updateStageFit();const scene=$('scene'),layers=$('layers');scene.dataset.pageKey=row.page_key;scene.dataset.fx=row.scene_data.sceneFx||'';fillBackground(row);layers.replaceChildren();for(const c of row.scene_data.components||[]){const el=elem(c,row);if(el)layers.append(el)}requestAnimationFrame(fitText);$('nextButton').hidden=true}
 function fxClasses(info){const s=String(info||'');if(s.includes('left'))return ['out-left','in-left'];if(s.includes('right'))return ['out-right','in-right'];if(/zoom|scale|grow|shrink/.test(s))return ['out-zoom','in-zoom'];return ['out-fade','in-fade']}
@@ -818,7 +860,7 @@ async function finishBoot(){
    else if(hasAuth&&getMainScene())goTo(getMainScene().page_name,true);
    else goTo(bundle.scenes.find(x=>!['Karşılama','Yükleme'].includes(x.page_name))?.page_name||homeName(),true);
    startBackgroundChecks();
-   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,applyPrepared:applyPreparedLive,isRealtimeConnected:()=>liveSocketReady,status:()=>({...dl}),getAuth:()=>!!auth.active,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
+   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,applyPrepared:applyPreparedLive,isRealtimeConnected:()=>liveSocketReady,status:()=>({...dl}),getAuth:()=>!!auth.active,getPlayerAvatarUrl:activePlayerAvatarUrl,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
  }catch(err){
    console.warn('TTO: eksik dosyayla girişe izin verilmedi:',err);
    dl.state='error';dl.speed=0;patchMetrics();
