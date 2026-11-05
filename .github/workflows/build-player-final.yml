@@ -135,7 +135,7 @@ jobs:
 
       - name: Publish APK download link
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           TAG=tto-oyuncu-v1.7.0
