@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#07121d">
-<title>Türkiye Ticaret Online · Oyuncu v2.0</title>
+<title>Türkiye Ticaret Online · Oyuncu v2.1 Canlı Yayın</title>
 <style>
 :root{color-scheme:dark;--gold:#e4be7e;--cream:#fff0ce;--blue:#89aac7;--surface:#091a2c;--ease:cubic-bezier(.2,.7,.2,1)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040b12;color:var(--cream);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.52;cursor:wait}
@@ -185,10 +185,10 @@ body{display:block!important;background:#06101c!important}
 'use strict';
 (()=>{
 /* TTO shared player engine contract v1.7 — identical in Yönetici/Oyuncu. */
-const TTO_ENGINE_VERSION='2.0.0';
+const TTO_ENGINE_VERSION='2.1.0';
 const TTO_SUPPORTED_KINDS=new Set(['background','panel','card','decor','text','label','heading','button','input','select','date','slider','toggle','checkbox','radio','progress','ring','stat','avatar','image','social']);
 const TTO_SUPPORTED_ACTIONS=new Set(['none','message','page','toggle','counter','link','social-link','auth-login-preview','auth-register-preview']);
-const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1','scene.background.pan.v1']);
+const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1','scene.background.pan.v1','scene.update.live.v1']);
 // A game mechanic is not supported simply because its visual controls can be rendered.
 const TTO_SUPPORTED_GAME_MECHANICS=new Set([]);
 const TTO_ANDROID_PERMISSIONS=new Set([]);
@@ -247,7 +247,7 @@ function ttoAuditSceneBundle(input){
  const unique=a=>[...new Set(a)];
  return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
 }
-const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.0.0'});
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.1.0'});
 const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
 const DESIGN_W=390,DESIGN_H=844;
 function updateStageFit(){
@@ -352,6 +352,15 @@ function idbPut(store,key,value){if(!db)return Promise.resolve(false);return new
 function idbDelete(store,key){if(!db)return Promise.resolve(false);return new Promise(resolve=>{try{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false)}catch(_){resolve(false)}})}
 function idbSwapPending(){if(!db)return Promise.resolve(null);return new Promise(resolve=>{try{const tx=db.transaction('state','readwrite'),st=tx.objectStore('state');let pending=null,manifest=null;const m=st.get('pendingGallery');m.onsuccess=()=>{manifest=m.result||null};const req=st.get('pending');req.onsuccess=()=>{pending=req.result||null;if(validBundle(pending)&&ttoAuditSceneBundle(pending).ok){st.put(pending,'active');st.delete('pending');if(validGallery(manifest)){st.put(manifest,'activeGallery');st.delete('pendingGallery')}}};tx.oncomplete=()=>resolve(validBundle(pending)&&ttoAuditSceneBundle(pending).ok?pending:null);tx.onerror=()=>resolve(null)}catch(_){resolve(null)}})}
 function idbStagePending(pack,manifest){if(!db)return Promise.resolve(false);return new Promise(resolve=>{try{const tx=db.transaction('state','readwrite');const st=tx.objectStore('state');st.put(manifest,'pendingGallery');st.put(pack,'pending');tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)}catch(_){resolve(false)}})}
+// Update active scenes and their gallery atomically only after all referenced assets are cached.
+function idbPromoteLive(pack,manifest){
+ if(!db)return Promise.resolve(writeLocal('active',pack)&&writeLocal('gallery',manifest));
+ return new Promise(resolve=>{try{const tx=db.transaction('state','readwrite'),st=tx.objectStore('state');
+   st.put(pack,'active');st.put(manifest,'activeGallery');st.delete('pending');st.delete('pendingGallery');
+   tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)
+ }catch(_){resolve(false)}})
+}
+
 function validGallery(v){return v&&Array.isArray(v.erkek)&&Array.isArray(v.kadin)&&[...v.erkek,...v.kadin].every(a=>a&&allowAssetUrl(a.url))}
 async function initStorage(){db=await openDB();let pending=db?await idbSwapPending():readLocal('pending');if(!db&&validBundle(pending)&&ttoAuditSceneBundle(pending).ok){writeLocal('active',pending);try{localStorage.removeItem(KEY+'_pending')}catch(_){}}bundle=(validBundle(pending)&&ttoAuditSceneBundle(pending).ok?pending:null) || (db?await idbGet('state','active'):readLocal('active')) || clone(BOOTSTRAP);if(!validBundle(bundle)||!ttoAuditSceneBundle(bundle).ok)bundle=clone(BOOTSTRAP);if(!db)writeLocal('active',bundle);const storedGallery=db?await idbGet('state','activeGallery'):readLocal('gallery');if(validGallery(storedGallery))avatars=storedGallery;const choice=readLocal('avatar');if(choice&&['erkek','kadin'].includes(choice.gender)&&allowAssetUrl(choice.url))avatarPick=choice;inputValues.email=String(readLocal('rememberEmail')||'');inputValues.rememberMe=!!inputValues.email}
 const assetMemory=new Map(),thumbnailUrls=new Map();
@@ -634,33 +643,79 @@ async function prefetchAssets(b,required=true,gallery=avatars,foreground=true){
 
 function validateResponse(rows){if(!Array.isArray(rows)||rows.length===0||rows.length>150)throw Error('Yayın listesi geçerli değil');const pack={schema:'tto_player_scene_bundle_v1',scenes:rows.filter(r=>r&&r.page_key&&r.page_name&&r.scene_data&&Array.isArray(r.scene_data.components))};for(const core of ['Karşılama','Yükleme']){if(!pack.scenes.some(x=>x.page_name===core)){const embedded=BOOTSTRAP.scenes.find(x=>x.page_name===core);if(embedded)pack.scenes.unshift(clone(embedded))}}if(!validBundle(pack))throw Error('Yayın paketi hatalı');return pack}
 async function retrievePublished(){const url=CONFIG.url+'/rest/v1/'+CONFIG.table+'?select=page_key,page_name,draft_key,published_at,scene_data&order=published_at.desc';const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),13000);try{const res=await fetch(url,{headers:{apikey:CONFIG.key,Accept:'application/json'},cache:'no-store',signal:ctrl.signal});if(!res.ok)throw Error('Yayın denetimi: '+res.status);return validateResponse(await res.json())}finally{clearTimeout(timer)}}
+// Live update: preserve the current scene until every image and avatar is ready.
+let preparedLive=null,liveApplyTimer=null,liveUpdateVersion=0,queuedLiveCheck=false;
+function isEditingForm(){
+ const active=document.activeElement;
+ return !!(active&&active.matches?.('input,textarea,select,[contenteditable="true"]')&&$('scene').contains(active));
+}
+function applyPreparedLive(){
+ if(!preparedLive)return false;
+ if(moving||auth.working||isEditingForm()||!$('avatarModal').hidden||!$('sceneMenu').hidden){
+   if(!liveApplyTimer)liveApplyTimer=setTimeout(()=>{liveApplyTimer=null;applyPreparedLive()},450);
+   return false;
+ }
+ const {pack,gallery}=preparedLive;preparedLive=null;
+ const visibleKey=$('scene').dataset.pageKey;
+ const name=current;
+ const previousRow=bundle?.scenes.find(row=>row.page_key===visibleKey)||bundle?.scenes.find(row=>row.page_name===name);
+ const avatarListChanged=gallerySignature(gallery)!==gallerySignature(avatars);
+ bundle=pack;avatars=gallery;syncAvatarChoice();
+ const same=pack.scenes.find(row=>row.page_key===visibleKey)||pack.scenes.find(row=>row.page_name===name);
+ const fallback=auth.active?getMainScene():getScene('Giriş');
+ const next=same||fallback||pack.scenes.find(x=>!['Karşılama','Yükleme'].includes(x.page_name));
+ if(next){
+   const currentSceneChanged=!previousRow||previousRow.page_key!==next.page_key||normTime(previousRow.published_at)!==normTime(next.published_at);
+   if(next.page_name===name){
+     if(currentSceneChanged||(avatarListChanged&&name==='Kayıt'))renderScene(next);
+     current=next.page_name;
+   }else{current='';goTo(next.page_name,false)}
+ }
+ // No extra UI elements or notifications added to the manager-authored scene.
+ setStatus('Yayınlanan yeni sahne etkin','ready');
+ return true;
+}
 async function stageUpdate(pack,knownManifest=null){
- lastCompatibilityReport=ttoAuditSceneBundle(pack);if(!lastCompatibilityReport.ok)throw Error((lastCompatibilityReport.requiresApk?'Uygulama güncellemesi gerekiyor: ':'Yeni sahne verisi/bağlantısı geçersiz: ')+lastCompatibilityReport.blocking.join('; '));
- if(!db){setStatus('Kalıcı önbellek kapalı · yeni sürüm sonraki açılışta indirilecek','warn');return}
+ lastCompatibilityReport=ttoAuditSceneBundle(pack);
+ if(!lastCompatibilityReport.ok)throw Error((lastCompatibilityReport.requiresApk?'Uygulama güncellemesi gerekiyor: ':'Yeni sahne verisi/bağlantısı geçersiz: ')+lastCompatibilityReport.blocking.join('; '));
  const manifest=knownManifest||await fetchGallerySnapshot({allowOffline:false});
- setStatus('Yeni sürüm ve avatarlar arka planda hazırlanıyor…','idle');
+ setStatus('Yayın güncellemesi indiriliyor…','idle');
  storageWarning=false;
  await prefetchAssets(pack,true,manifest,false);
- if(storageWarning)throw Error('Yetersiz depolama: güncelleme henüz çevrimdışı hazır değil.');
- for(const url of assetSources(pack,manifest)){if(!((await idbGet('assets',url)) instanceof Blob))throw Error('Güncelleme dosyası kalıcı kaydedilemedi.')}
- if(!(await idbStagePending(pack,manifest)))throw Error('Güncelleme kalıcı alana kaydedilemedi');
- setStatus('Yeni sürüm hazır · oyunu yeniden açınca uygulanacak','ready')
+ if(db&&storageWarning)throw Error('Depolama dolu: canlı güncelleme korunamadı.');
+ // All referenced assets must already exist in the in-memory or persistent local cache.
+ for(const url of assetSources(pack,manifest)){
+  if(!((await cachedBlob(url)) instanceof Blob))throw Error('Yayın görseli indirme sırasında eksik kaldı.');
+ }
+ if(!(await idbPromoteLive(pack,manifest)))throw Error('Canlı yayın paketi güvenli kaydedilemedi.');
+ preparedLive={pack,gallery:manifest};++liveUpdateVersion;
+ applyPreparedLive();
 }
 function gallerySignature(g){if(!validGallery(g))return '';return [...g.erkek,...g.kadin].map(a=>a.path+'|'+String(a.size||0)).sort().join(';')}
 async function lookForUpdates(){
- if(updateRunning||!navigator.onLine)return;updateRunning=true;
+ if(updateRunning){queuedLiveCheck=true;return}
+ if(!navigator.onLine)return;
+ updateRunning=true;
  try{
    const latest=await retrievePublished();
-   lastCompatibilityReport=ttoAuditSceneBundle(latest);if(!lastCompatibilityReport.ok){setStatus(lastCompatibilityReport.requiresApk?'Yeni içerik için uygulama güncellemesi gerekiyor':'Yeni yayınlanan sayfalarda bağlantı hatası var','warn');if(!window.TTOIncompatibleNotified){window.TTOIncompatibleNotified=true;note(lastCompatibilityReport.requiresApk?'Yeni oyun içeriği için uygulama güncellemesi gerekli. Mevcut sürüm korunuyor.':'Yeni yayınlanan sayfalar henüz hazır değil. Mevcut sürüm korunuyor.',6000)}return}
+   lastCompatibilityReport=ttoAuditSceneBundle(latest);
+   if(!lastCompatibilityReport.ok){
+    setStatus(lastCompatibilityReport.requiresApk?'Yeni içerik için APK güncellemesi gerekiyor':'Yayınlanan sahnede uyumsuzluk var','warn');
+    if(!window.TTOIncompatibleNotified){window.TTOIncompatibleNotified=true;note(lastCompatibilityReport.requiresApk?'Yeni içerik için APK güncellemesi gerekli. Mevcut sahneler korunuyor.':'Yeni yayınlanan sayfalar henüz hazır değil. Mevcut sürüm korunuyor.',6000)}
+    return;
+   }
    const remoteGallery=await fetchGallerySnapshot({allowOffline:false});
    const changed=signature(latest)!==signature(bundle)||gallerySignature(remoteGallery)!==gallerySignature(avatars);
-   if(!changed){setStatus('Sahneler ve avatarlar güncel','idle');return}
-   const oldPending=db?await idbGet('state','pending'):readLocal('pending');
-   const oldGallery=db?await idbGet('state','pendingGallery'):null;
-   if(validBundle(oldPending)&&signature(oldPending)===signature(latest)&&gallerySignature(oldGallery)===gallerySignature(remoteGallery))setStatus('Yeni paket hazır · yeniden açınca uygulanacak','ready');
-   else await stageUpdate(latest,remoteGallery);
- }catch(err){setStatus('Güncelleme kontrolü başarısız · mevcut sahneler korunuyor','warn');console.warn('TTO güncelleme:',err)}
- finally{updateRunning=false}
+   if(!changed){setStatus('Sahneler güncel','idle');return}
+   if(preparedLive&&signature(preparedLive.pack)===signature(latest)&&gallerySignature(preparedLive.gallery)===gallerySignature(remoteGallery)){
+    applyPreparedLive();return;
+   }
+   await stageUpdate(latest,remoteGallery);
+ }catch(err){setStatus('Güncelleme indirilemedi · mevcut sahne korunuyor','warn');console.warn('TTO canlı yayın:',err)}
+ finally{
+   updateRunning=false;
+   if(queuedLiveCheck){queuedLiveCheck=false;setTimeout(()=>void lookForUpdates(),200)}
+ }
 }
 async function completeInitialLoad(){
  // On a new app launch, obtain the latest published snapshot before leaving Loading.
@@ -686,14 +741,69 @@ async function completeInitialLoad(){
  $('loadGate').hidden=true;
  return true;
 }
-let startupCheckStarted=false;
+// Native Supabase Realtime protocol 1.0.0: notifications contain no UI and only signal a refetch.
+let startupCheckStarted=false,liveSocket=null,liveSocketReady=false,liveReconnectTimer=null,liveHeartbeat=null,liveRef=0,liveJoinId=null,liveSubscriptionIds=[];
+let liveEventTimer=null,liveClosed=false;
+const liveTopic='realtime:tto-player-published-scenes';
+function liveSend(event,topic,payload,joinRef=null){
+ if(!liveSocket||liveSocket.readyState!==1)return;
+ const ref=String(++liveRef);liveSocket.send(JSON.stringify({topic,event,payload,ref,join_ref:joinRef}));return ref;
+}
+function notifyLivePublish(){
+ clearTimeout(liveEventTimer);
+ liveEventTimer=setTimeout(()=>void lookForUpdates(),300);
+}
+function startLiveSubscription(){
+ if(liveClosed||!navigator.onLine||typeof WebSocket!=='function')return;
+ if(liveSocket&&[0,1].includes(liveSocket.readyState))return;
+ clearTimeout(liveReconnectTimer);
+ try{
+  const addr=CONFIG.url.replace(/^https:/,'wss:')+'/realtime/v1/websocket?apikey='+encodeURIComponent(CONFIG.key)+'&vsn=1.0.0';
+  const sock=new WebSocket(addr);liveSocket=sock;liveSocketReady=false;
+  sock.onopen=()=>{
+    if(liveSocket!==sock)return;
+    liveJoinId=liveSend('phx_join',liveTopic,{config:{private:false,broadcast:{ack:false,self:false},presence:{enabled:false},postgres_changes:[{event:'*',schema:'public',table:CONFIG.table}]}});
+    clearInterval(liveHeartbeat);
+    liveHeartbeat=setInterval(()=>{if(sock.readyState===1)liveSend('heartbeat','phoenix',{})},25000);
+  };
+  sock.onmessage=event=>{
+    if(liveSocket!==sock)return;
+    let message;try{message=JSON.parse(event.data)}catch(_){return}
+    if(message.event==='phx_reply'&&message.ref===liveJoinId){
+      if(message.payload?.status==='ok'){
+        liveSocketReady=true;
+        liveSubscriptionIds=(message.payload.response?.postgres_changes||[]).map(x=>x.id);
+        notifyLivePublish(); // Close the join/fetch race: check once after subscribing.
+      }else{console.warn('TTO canlı yayın aboneliği reddedildi.');sock.close()}
+    }
+    if(message.event==='postgres_changes'&&message.topic===liveTopic){
+      const eventIds=message.payload?.ids||[];
+      if(message.payload?.data?.table===CONFIG.table && (!liveSubscriptionIds.length||eventIds.some(id=>liveSubscriptionIds.includes(id))))notifyLivePublish();
+    }
+    if(message.event==='phx_error'||message.event==='phx_close'){sock.close()}
+  };
+  sock.onerror=()=>{liveSocketReady=false};
+  sock.onclose=()=>{
+    if(liveSocket!==sock)return;
+    liveSocket=null;liveSocketReady=false;clearInterval(liveHeartbeat);liveHeartbeat=null;
+    if(!liveClosed){clearTimeout(liveReconnectTimer);liveReconnectTimer=setTimeout(startLiveSubscription,3500)}
+  };
+ }catch(err){console.warn('Canlı bağlantı kurulamıyor:',err);clearTimeout(liveReconnectTimer);liveReconnectTimer=setTimeout(startLiveSubscription,6000)}
+}
 function startBackgroundChecks(){
  if(startupCheckStarted)return;startupCheckStarted=true;
- setTimeout(()=>void lookForUpdates(),2500);
- setInterval(()=>{if(!document.hidden)void lookForUpdates()},60000);
- window.addEventListener('online',()=>void lookForUpdates());
- document.addEventListener('visibilitychange',()=>{if(!document.hidden)void lookForUpdates()});
- window.addEventListener('beforeunload',()=>{for(const u of imageObjectUrls.values())URL.revokeObjectURL(u);for(const u of thumbnailUrls.values())URL.revokeObjectURL(u)});
+ startLiveSubscription();
+ setTimeout(()=>void lookForUpdates(),2300);
+ // WebSocket is normally instant; periodic polling covers offline, sleeping or blocked sockets.
+ setInterval(()=>{if(!document.hidden)void lookForUpdates()},25000);
+ window.addEventListener('online',()=>{startLiveSubscription();notifyLivePublish()});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){startLiveSubscription();notifyLivePublish()}});
+ window.addEventListener('beforeunload',()=>{
+    liveClosed=true;clearTimeout(liveReconnectTimer);clearTimeout(liveEventTimer);clearInterval(liveHeartbeat);
+    try{liveSocket?.close()}catch(_){}
+    for(const u of imageObjectUrls.values())URL.revokeObjectURL(u);
+    for(const u of thumbnailUrls.values())URL.revokeObjectURL(u);
+ });
 }
 async function finishBoot(){
  $('retryLoad').hidden=true;
@@ -708,7 +818,7 @@ async function finishBoot(){
    else if(hasAuth&&getMainScene())goTo(getMainScene().page_name,true);
    else goTo(bundle.scenes.find(x=>!['Karşılama','Yükleme'].includes(x.page_name))?.page_name||homeName(),true);
    startBackgroundChecks();
-   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,status:()=>({...dl}),getAuth:()=>!!auth.active,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
+   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,applyPrepared:applyPreparedLive,isRealtimeConnected:()=>liveSocketReady,status:()=>({...dl}),getAuth:()=>!!auth.active,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
  }catch(err){
    console.warn('TTO: eksik dosyayla girişe izin verilmedi:',err);
    dl.state='error';dl.speed=0;patchMetrics();
