@@ -288,14 +288,11 @@ function gameHome(){
   return getScene('Anasayfa')||getScene('Ana Menü')||bundle?.scenes?.find(row=>/^(?:ana\s*sayfa|ana\s*menü)$/iu.test(String(row.page_name||'').trim()))||null;
 }
 function showPlayerHome(){
-  const publishedHome=gameHome();
-  if(publishedHome){hidePlayerHome();goTo(publishedHome.page_name,true);return}
- $('playerHome').hidden=false;
- const meta=auth.user?.user_metadata||{};const name=String(meta.username||auth.user?.email?.split('@')[0]||'Oyuncu').slice(0,45);
- $('playerGreeting').textContent='HOŞ GELDİN, '+name.toLocaleUpperCase('tr-TR');
- const image=$('playerAvatar');image.replaceChildren();if(allowAssetUrl(meta.avatar_url)){appendImage(image,meta.avatar_url,'cover')}else image.textContent='◆';
- const menu=gameHome();$('enterGameBtn').hidden=!menu;
- $('homeInfo').textContent=menu?'Oyun dünyan hazır. Devam etmek için dokun.':'Hesabınla giriş yaptın. Oyun ana menüsü henüz Yönetici üzerinden yayınlanmadı. Yeni sahneler yayınlandığında arka planda alınacak.';
+ // Never replace a published scene with a hard-coded player panel.
+ hidePlayerHome();
+ const publishedHome=gameHome();
+ if(publishedHome){goTo(publishedHome.page_name,true);return}
+ note('Anasayfa henüz yayınlanmadı. Yönetici uygulamasından yayınlanması gerekiyor.',6000);
 }
 function hidePlayerHome(){$('playerHome').hidden=true}
 async function doLogin(){
