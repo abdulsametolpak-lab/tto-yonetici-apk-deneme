@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#07121d">
-<title>Türkiye Ticaret Online · Oyuncu v2.1 Canlı Yayın</title>
+<title>Türkiye Ticaret Online · Oyuncu v2.3 Profil Avatarı</title>
 <style>
 :root{color-scheme:dark;--gold:#e4be7e;--cream:#fff0ce;--blue:#89aac7;--surface:#091a2c;--ease:cubic-bezier(.2,.7,.2,1)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040b12;color:var(--cream);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.52;cursor:wait}
@@ -157,7 +157,12 @@ body{display:block!important;background:#06101c!important}
 #loadGate.error #loadGateLabel{color:#ffd2c9}
 #avatarGrid .thumb img{position:absolute!important;inset:3px!important;width:calc(100% - 6px)!important;height:calc(100% - 6px)!important;object-fit:contain!important;object-position:center!important;max-width:none;max-height:none}
 
-/* v2.2 profile avatar button: only the signed-in user's own avatar */
+/* v2.3: account-bound avatar selection for profiles with no saved registration avatar */
+#avatarProfileTabs{display:flex;gap:8px;margin-top:16px}
+#avatarProfileTabs[hidden]{display:none!important}
+#avatarProfileTabs button{flex:1;min-width:0;background:linear-gradient(155deg,#1b314b,#0d2031);border:1px solid #95784d;color:#ffdfa4;border-radius:10px;padding:12px 6px;font-size:12px;font-weight:750;cursor:pointer}
+#avatarProfileTabs button.active{border-color:#ffe0a2;background:linear-gradient(155deg,#80613a,#2c2630)}
+/* v2.2: image-only avatar from the authenticated player's account */
 .layer.player-avatar-button{display:grid!important;place-items:center!important;overflow:hidden!important;padding:0!important;background-image:none!important;}
 .layer.player-avatar-button img{display:block;width:100%;height:100%;max-height:100%;max-width:100%;object-fit:contain!important;object-position:center;pointer-events:none;user-select:none;}
 .layer .player-avatar-blank{display:block;width:47%;height:58%;max-width:54px;max-height:70px;background:linear-gradient(#e9c891,#c18b4b);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M3 21v-2a9 9 0 0 1 18 0v2z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M3 21v-2a9 9 0 0 1 18 0v2z'/%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none;}
@@ -182,14 +187,14 @@ body{display:block!important;background:#06101c!important}
   </div>
  </section>
  <section id="sceneMenu" hidden aria-label="Sahne Seçimi"><header class="modalHead"><div><div class="modalTitle">TTO · SAHNELER</div><div class="modalSub">Yönetici tarafından yayınlanan ekranlar</div></div><button class="modalClose" id="closeMenu" aria-label="Kapat">×</button></header><div id="sceneButtons"></div><p class="menuHint">Yönetici’de yayınlanan yeni sahneler, oyun çalışırken belirli aralıklarla kontrol edilip indirilir. Yeni paket uygulama yeniden açıldığında kullanılır.</p></section>
- <section id="avatarModal" hidden aria-label="Avatar Galerisi"><header class="modalHead"><div><div class="modalTitle" id="avatarTitle">AVATAR SEÇ</div><div class="modalSub">Bir görsel seçmek için dokun</div></div><button class="modalClose" id="closeAvatar" aria-label="Kapat">×</button></header><div id="avatarGrid"></div><p class="menuHint" id="avatarHint"></p></section>
+ <section id="avatarModal" hidden aria-label="Avatar Galerisi"><header class="modalHead"><div><div class="modalTitle" id="avatarTitle">AVATAR SEÇ</div><div class="modalSub">Bir görsel seçmek için dokun</div></div><button class="modalClose" id="closeAvatar" aria-label="Kapat">×</button></header><div id="avatarProfileTabs" hidden role="group" aria-label="Avatar kategorisi"><button type="button" id="avatarProfileMale">Erkek avatarları</button><button type="button" id="avatarProfileFemale">Kadın avatarları</button></div><div id="avatarGrid"></div><p class="menuHint" id="avatarHint"></p></section>
 </main>
 <script id="builtInScenes" type="application/json">{"schema":"tto_player_scene_bundle_v1","scenes":[{"page_key":"page_mvzmdnpc_6ij5153v","draft_key":"draft_mvzmdnpc_bd4rdw6o","page_name":"Karşılama","published_at":"2026-11-04 15:27:00.485+00","scene_data":{"name":"Karşılama","schema":"tto_ui_scene_v1","sceneFx":"","sceneSkin":"","background":"#081626","components":[{"kind":"background","type":"background","x":0,"y":0,"width":100,"height":100,"text":"Sayfa Arka Planı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":0,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/kars-lama-86db67fd.jpg","assetPath":"ui/kars-lama-86db67fd.jpg","backgroundFit":"100% 100%","backgroundPosition":"center","backgroundShade":0.1,"visible":true}],"transition":{"ease":"ease-in-out","exit":"push-right","enter":"push-left","overlap":true,"duration":2000}}},{"page_key":"page_mvzo3d3l_86kpf40h","draft_key":"draft_mvzo3d3l_6ui7jii3","page_name":"Yükleme","published_at":"2026-11-04 15:26:56.748+00","scene_data":{"name":"Yükleme","schema":"tto_ui_scene_v1","sceneFx":"transfer","sceneSkin":"","background":"radial-gradient(circle at 50% 90%,rgba(255,219,145,.10),transparent 18%),linear-gradient(165deg,#09121e 0%,#122335 35%,#0a1320 100%)","components":[{"kind":"ring","type":"ring","x":34,"y":48.5315,"width":36,"height":21,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":21,"opacity":1,"radius":999,"variant":"neon","enabled":true,"value":68,"min":0,"max":100,"accent":"loading-minimal-ring","barStyle":"halo","metricKey":"downloadPercent"},{"kind":"text","type":"text","x":43.8343,"y":71.354,"width":18,"height":4.5,"text":"İndiriliyor…","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":11,"opacity":1,"radius":12,"variant":"glass","enabled":true,"fontWeight":"850","textAlign":"left"},{"kind":"panel","type":"panel","x":10.5691,"y":77.1826,"width":82,"height":16,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":12,"opacity":0.86,"radius":15,"variant":"glass","enabled":true},{"kind":"text","type":"text","x":15.0337,"y":79.0298,"width":25.3333,"height":11.8,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":11.3,"opacity":1,"radius":12,"variant":"glass","enabled":true,"metricKey":"downloadSpeed","metricLabel":"İNDİRME HIZI","compactMetric":true,"fontWeight":"900","textAlign":"center"},{"kind":"text","type":"text","x":40.7041,"y":79.0344,"width":25.3333,"height":11.8,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":11.3,"opacity":1,"radius":12,"variant":"glass","enabled":true,"metricKey":"downloadTotal","metricLabel":"TOPLAM DOSYA BOYUTU","compactMetric":true,"fontWeight":"900","textAlign":"center"},{"kind":"text","type":"text","x":65.588,"y":79.0257,"width":25.3333,"height":11.8,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":11.3,"opacity":1,"radius":12,"variant":"glass","enabled":true,"metricKey":"downloadLoaded","metricLabel":"İNDİRİLEN","compactMetric":true,"fontWeight":"900","textAlign":"center"},{"kind":"background","type":"background","x":0,"y":0,"width":100,"height":100,"text":"Sayfa Arka Planı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":0,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/yukleme-eded4ee7.jpg","assetPath":"ui/yukleme-eded4ee7.jpg","backgroundFit":"cover","backgroundPosition":"center","backgroundShade":0.18,"visible":true}],"transition":{"ease":"ease-in-out","exit":"push-right","enter":"push-left","overlap":true,"duration":2000},"loadingSource":{"bucket":"tto-loading","prefix":"","provider":"supabase-storage","speedMetric":"downloadSpeed","totalMetric":"downloadTotal","progressMetric":"downloadPercent","downloadedMetric":"downloadLoaded"}}},{"page_key":"page_mw16k3u1_a5a5hk4m","draft_key":"draft_mw16lbna_eaz2u4r6","page_name":"Kayıt","published_at":"2026-11-04 15:26:52.839+00","scene_data":{"name":"Kayıt","schema":"tto_ui_scene_v1","sceneFx":"gateway","sceneSkin":"royal","background":"radial-gradient(circle at 50% 50%,rgba(255,215,150,.08),transparent 35%),linear-gradient(135deg,#0b1625 0%,#102235 48%,#08101b 100%)","components":[{"kind":"panel","type":"panel","x":7,"y":13,"width":86,"height":82,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.45,"radius":30,"variant":"soft","enabled":true,"motion":"breathe"},{"kind":"decor","type":"decor","x":12,"y":13,"width":76,"height":1,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.6,"radius":22,"variant":"neon","enabled":true},{"kind":"text","type":"text","x":20,"y":16.2,"width":61,"height":5.5,"text":"OYUNCU HESABI OLUŞTUR","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":18,"opacity":1,"radius":12,"variant":"glass","enabled":true,"fontWeight":"950","textAlign":"center"},{"kind":"text","type":"text","x":20,"y":22.5,"width":60,"height":3.6,"text":"Avatarını seç ve ticaret yolculuğuna başla","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":9.5,"opacity":1,"radius":12,"variant":"glass","enabled":true,"textAlign":"center"},{"kind":"decor","type":"decor","x":12,"y":27.5,"width":76,"height":0.35,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":99,"variant":"neon","enabled":true,"motion":"shine"},{"kind":"avatar","type":"avatar","x":13,"y":30,"width":35,"height":13.8,"text":"ERKEK","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":16,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/avatars/erkek/avatar-5c117484.png","assetPath":"ui/avatars/erkek/avatar-5c117484.png","avatarGender":"erkek","avatarGallery":{"bucket":"tto-ui-assets","prefix":"ui/avatars/erkek/","provider":"supabase-storage","openOnDoubleTap":true}},{"kind":"avatar","type":"avatar","x":52,"y":30,"width":35,"height":13.8,"text":"KADIN","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":16,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/avatars/kadin/avatar-239d2336.png","assetPath":"ui/avatars/kadin/avatar-239d2336.png","avatarGender":"kadin","avatarGallery":{"bucket":"tto-ui-assets","prefix":"ui/avatars/kadin/","provider":"supabase-storage","openOnDoubleTap":true}},{"kind":"input","type":"input","x":13,"y":45,"width":74,"height":6.9,"text":"Kullanıcı adı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"username","placeholder":"Kullanıcı adı","required":true},{"kind":"input","type":"input","x":13,"y":53,"width":74,"height":6.9,"text":"E-posta adresi","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"email","placeholder":"E-posta adresi","required":true},{"kind":"input","type":"input","x":13,"y":61,"width":74,"height":6.9,"text":"Şifre","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"password","placeholder":"Şifre","secure":true,"required":true},{"kind":"input","type":"input","x":13,"y":69,"width":74,"height":6.9,"text":"Şifre Tekrar","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"passwordConfirm","placeholder":"Şifre Tekrar","secure":true,"required":true},{"kind":"button","type":"button","x":13,"y":78,"width":74,"height":7.1,"text":"KAYIT OL","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.5,"opacity":1,"radius":13,"variant":"solid","enabled":true,"action":"auth-register-preview","motion":"shine"},{"kind":"button","type":"button","x":13,"y":86,"width":74,"height":7.1,"text":"ZATEN BİR HESABIM VAR","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.5,"opacity":1,"radius":13,"variant":"outline","enabled":true,"action":"page","target":"page_mw16k3u1_4y820qym","motion":"shine"},{"kind":"background","type":"background","x":0,"y":0,"width":100,"height":100,"text":"Sayfa Arka Planı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":0,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/giris-kay-t-ec0c858f.png","assetPath":"ui/giris-kay-t-ec0c858f.png","backgroundFit":"cover","backgroundPosition":"center","backgroundShade":0.18,"visible":true}],"transition":{"ease":"ease-in-out","exit":"push-right","enter":"push-left","overlap":true,"duration":2000}}},{"page_key":"page_mw16k3u1_4y820qym","draft_key":"draft_mw16lbna_5w9vo1yf","page_name":"Giriş","published_at":"2026-11-04 15:26:43.714+00","scene_data":{"name":"Giriş","schema":"tto_ui_scene_v1","sceneFx":"gateway","sceneSkin":"royal","background":"radial-gradient(circle at 50% 50%,rgba(255,215,150,.08),transparent 35%),linear-gradient(135deg,#0b1625 0%,#102235 48%,#08101b 100%)","components":[{"kind":"panel","type":"panel","x":7,"y":12,"width":86,"height":80,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.45,"radius":30,"variant":"soft","enabled":true,"motion":"breathe"},{"kind":"decor","type":"decor","x":12,"y":13,"width":76,"height":1,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.6,"radius":22,"variant":"neon","enabled":true},{"kind":"text","type":"text","x":20,"y":16.2,"width":60,"height":5.5,"text":"HESABINA GİRİŞ YAP","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":20,"opacity":1,"radius":12,"variant":"glass","enabled":true,"fontWeight":"950","textAlign":"center"},{"kind":"text","type":"text","x":22,"y":22.5,"width":56,"height":3.6,"text":"Ekonomi dünyasına yeniden hoş geldin","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":9.5,"opacity":1,"radius":12,"variant":"glass","enabled":true,"textAlign":"center"},{"kind":"decor","type":"decor","x":12,"y":27.5,"width":76,"height":0.35,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.55,"radius":99,"variant":"neon","enabled":true,"motion":"shine"},{"kind":"input","type":"input","x":13,"y":30,"width":74,"height":6.9,"text":"E-posta adresi","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"email","placeholder":"E-posta adresi","required":true},{"kind":"input","type":"input","x":13,"y":38,"width":74,"height":6.9,"text":"Şifre","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"password","placeholder":"Şifre","required":true,"secure":true},{"kind":"toggle","type":"toggle","x":14,"y":46,"width":30,"height":5,"text":"Beni Hatırla","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.6,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"rememberMe","checked":false},{"kind":"button","type":"button","x":13,"y":55,"width":74,"height":7.1,"text":"GİRİŞ YAP","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.5,"opacity":1,"radius":13,"variant":"solid","enabled":true,"action":"auth-login-preview","motion":"shine"},{"kind":"button","type":"button","x":13,"y":64,"width":74,"height":7.1,"text":"KAYIT OL","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.5,"opacity":1,"radius":13,"variant":"outline","enabled":true,"action":"page","target":"page_mw16k3u1_a5a5hk4m","motion":"shine"},{"kind":"background","type":"background","x":0,"y":0,"width":100,"height":100,"text":"Sayfa Arka Planı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":0,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/giris-kay-t-ec0c858f.png","assetPath":"ui/giris-kay-t-ec0c858f.png","backgroundFit":"cover","backgroundPosition":"center","backgroundShade":0.18,"visible":true},{"kind":"social","type":"social","x":13,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/instagram-44d23ce3.png","assetPath":"ui/instagram-44d23ce3.png","socialPlatform":"instagram","action":"link","target":""},{"kind":"social","type":"social","x":28,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/x-twitter-2f7e17a7.png","assetPath":"ui/x-twitter-2f7e17a7.png","socialPlatform":"x","action":"link","target":""},{"kind":"social","type":"social","x":43,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/facebook-a491c0e1.png","assetPath":"ui/facebook-a491c0e1.png","socialPlatform":"facebook","action":"link","target":""},{"kind":"social","type":"social","x":58,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/telegram-f41cae6b.png","assetPath":"ui/telegram-f41cae6b.png","socialPlatform":"telegram","action":"link","target":""},{"kind":"social","type":"social","x":73,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/youtube-ae191aec.png","assetPath":"ui/youtube-ae191aec.png","socialPlatform":"youtube","action":"link","target":""}],"transition":{"ease":"ease-in-out","exit":"push-right","enter":"push-left","overlap":true,"duration":2000}}}]}</script>
 <script>
 'use strict';
 (()=>{
 /* TTO shared player engine contract v1.7 — identical in Yönetici/Oyuncu. */
-const TTO_ENGINE_VERSION='2.2.0';
+const TTO_ENGINE_VERSION='2.3.0';
 const TTO_SUPPORTED_KINDS=new Set(['background','panel','card','decor','text','label','heading','button','input','select','date','slider','toggle','checkbox','radio','progress','ring','stat','avatar','image','social']);
 const TTO_SUPPORTED_ACTIONS=new Set(['none','message','page','toggle','counter','link','social-link','auth-login-preview','auth-register-preview']);
 const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1','scene.background.pan.v1','scene.update.live.v1','profile.avatar.button.v1']);
@@ -253,7 +258,7 @@ function ttoAuditSceneBundle(input){
  const unique=a=>[...new Set(a)];
  return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
 }
-const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.2.0'});
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.3.0'});
 const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
 const DESIGN_W=390,DESIGN_H=844;
 function updateStageFit(){
@@ -268,7 +273,7 @@ const KEY='tto_player_scene_cache_v1',IDB='tto_player_offline_v1';let db=null,bu
 let lastCompatibilityReport={ok:true,requiresApk:false,blocking:[],warnings:[]};const uiValues=new Map();let avatarPick={gender:'',url:''};let avatars={erkek:[],kadin:[]};const inputValues={username:'',email:'',password:'',passwordConfirm:'',rememberMe:false};
 
 const SESSION_KEY=KEY+'_auth';
-const auth={session:null,user:null,active:false,working:false};
+const auth={session:null,user:null,active:false,working:false};let avatarGalleryMode='registration',profileAvatarSaving=false;
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function verifiedProfileAvatarUrl(src){
  if(!src||!allowAssetUrl(src))return '';
@@ -279,7 +284,7 @@ function verifiedProfileAvatarUrl(src){
  }catch(_){return ''}
 }
 function activePlayerAvatarUrl(){
- // Never reuse the device-wide registration selection across unrelated accounts.
+ // An unverified device-wide avatarPick must never leak across accounts.
  return auth.active?verifiedProfileAvatarUrl(auth.user?.user_metadata?.avatar_url||''):'';
 }
 function refreshProfileAvatarButtons(){
@@ -290,6 +295,7 @@ function refreshProfileAvatarButtons(){
   else{const mark=document.createElement('span');mark.className='player-avatar-blank';mark.setAttribute('aria-hidden','true');box.append(mark);}
  }
 }
+// Older accounts may have the avatar in their RLS-protected player record.
 async function hydrateProfileAvatar(){
  const userId=auth.user?.id,token=auth.session?.access_token;
  if(!auth.active||!userId||!token||activePlayerAvatarUrl())return;
@@ -306,6 +312,7 @@ async function hydrateProfileAvatar(){
   refreshProfileAvatarButtons();
  }catch(err){console.warn('Profil avatarı getirilemedi',err)}
 }
+
 const validEmail=x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(x||''));
 const fromStore=(store,key)=>{try{return JSON.parse(store.getItem(key)||'null')}catch(_){return null}};
 function forgetSession(){try{localStorage.removeItem(SESSION_KEY)}catch(_){}try{sessionStorage.removeItem(SESSION_KEY)}catch(_){}auth.session=null;auth.user=null;auth.active=false}
@@ -524,7 +531,7 @@ function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return nu
   e.style.width=side+'px';e.style.height=side+'px';
   e.setAttribute('role','button');e.tabIndex=0;e.setAttribute('aria-label',(c.socialPlatform||'Sosyal')+' bağlantısı');appendImage(e,c.src,'contain');e.onclick=()=>{const url=safeLink(c.target);if(url)window.open(url,'_blank','noopener,noreferrer');else note('Bu sosyal medya butonuna henüz bağlantı atanmamış.')};e.onkeydown=ev=>{if(ev.key==='Enter')e.click()};return e}
  if(kind==='image'){appendImage(e,c.src,'cover');return e}
- if(kind==='button'){e.setAttribute('role','button');e.tabIndex=0;if(c.imageSource==='playerAvatar'){e.dataset.avatarBinding='playerAvatar';e.classList.add('player-avatar-button');e.setAttribute('aria-label','Oyuncu profil avatarı');const imageUrl=activePlayerAvatarUrl();if(imageUrl)appendImage(e,imageUrl,'contain');else{const placeholder=document.createElement('span');placeholder.className='player-avatar-blank';placeholder.setAttribute('aria-hidden','true');e.append(placeholder)}}else e.textContent=visibleText(c.text||'');e.onclick=()=>handleButton(c,scene);e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();e.click()}};return e}
+ if(kind==='button'){e.setAttribute('role','button');e.tabIndex=0;if(c.imageSource==='playerAvatar'){e.dataset.avatarBinding='playerAvatar';e.classList.add('player-avatar-button');e.setAttribute('aria-label','Oyuncu profil avatarı');const imageUrl=activePlayerAvatarUrl();if(imageUrl)appendImage(e,imageUrl,'contain');else{const placeholder=document.createElement('span');placeholder.className='player-avatar-blank';placeholder.setAttribute('aria-hidden','true');e.append(placeholder)}}else e.textContent=visibleText(c.text||'');e.onclick=()=>{if(c.imageSource==='playerAvatar'&&(!c.action||c.action==='none'))return openProfileAvatarSelector();return handleButton(c,scene)};e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();e.click()}};return e}
  e.textContent=visibleText(c.text||'');return e}
 function renderScene(row){if(!row)return;updateStageFit();const scene=$('scene'),layers=$('layers');scene.dataset.pageKey=row.page_key;scene.dataset.fx=row.scene_data.sceneFx||'';fillBackground(row);layers.replaceChildren();for(const c of row.scene_data.components||[]){const el=elem(c,row);if(el)layers.append(el)}requestAnimationFrame(fitText);$('nextButton').hidden=true}
 function fxClasses(info){const s=String(info||'');if(s.includes('left'))return ['out-left','in-left'];if(s.includes('right'))return ['out-right','in-right'];if(/zoom|scale|grow|shrink/.test(s))return ['out-zoom','in-zoom'];return ['out-fade','in-fade']}
@@ -565,16 +572,60 @@ async function fetchGallerySnapshot({allowOffline=true}={}){
  }
 }
 function syncAvatarChoice(){if(!avatarPick.url)return;const exists=(avatars[avatarPick.gender]||[]).some(a=>a.url===avatarPick.url);if(!exists){avatarPick={gender:'',url:''};writeLocal('avatar',avatarPick)}}
-function openAvatar(g){
- if(!$('avatarModal').hidden)return;
+function openProfileAvatarSelector(){
+ if(!auth.active||!auth.session?.access_token){note('Avatarını kaydetmek için giriş yapmalısın.');return}
+ const gender=auth.user?.user_metadata?.avatar_gender==='kadin'?'kadin':'erkek';
+ openAvatar(gender,'profile');
+}
+async function persistPlayerAvatarChoice(g,url){
+ const checked=verifiedProfileAvatarUrl(url);
+ if(!auth.active||!auth.session?.access_token||!auth.user?.id)throw Error('Avatarı kaydetmek için giriş yapmalısın.');
+ if(!checked||(avatars[g]||[]).every(a=>a.url!==checked))throw Error('Lütfen galeriden geçerli bir avatar seç.');
+ const owner=auth.user.id,token=auth.session.access_token;
+ // Write the avatar to the signed-in user's server-side Auth metadata, not a device-wide selection.
+ const result=await authFetch('user','PUT',{data:{avatar_url:checked,avatar_gender:g}},token);
+ if(!auth.active||auth.user?.id!==owner)throw Error('Hesap değiştiği için avatar seçimi uygulanmadı.');
+ const returned=result?.user||result;
+ const storedUrl=verifiedProfileAvatarUrl(returned?.user_metadata?.avatar_url||checked);
+ if(!storedUrl)throw Error('Avatar bilgisi kaydedilemedi.');
+ auth.user={...auth.user,...returned,user_metadata:{...(auth.user.user_metadata||{}),...(returned.user_metadata||{}),avatar_url:storedUrl,avatar_gender:g}};
+ if(auth.session)auth.session.user=auth.user;
+ try{const storage=localStorage.getItem(SESSION_KEY)?localStorage:sessionStorage;if(auth.session)storage.setItem(SESSION_KEY,JSON.stringify(auth.session))}catch(_){}
+ refreshProfileAvatarButtons();
+ return storedUrl;
+}
+function openAvatar(g,mode='registration'){
+ if(!['erkek','kadin'].includes(g))return;
+ if(mode!=='profile'&&!$('avatarModal').hidden)return;
+ if(mode==='profile'&&!auth.active){note('Avatarını kaydetmek için giriş yap.');return}
  const imgs=avatars[g]||[];
  if(!imgs.length){note('Avatar galerisi hazır değil. Oyunu yeniden başlatıp dosyaları yükle.',5500);return}
- $('avatarTitle').textContent=g==='erkek'?'ERKEK AVATARLARI':'KADIN AVATARLARI';
+ avatarGalleryMode=mode;
+ const profile=mode==='profile';
+ $('avatarProfileTabs').hidden=!profile;
+ $('avatarProfileMale').classList.toggle('active',profile&&g==='erkek');
+ $('avatarProfileFemale').classList.toggle('active',profile&&g==='kadin');
+ $('avatarTitle').textContent=profile?'PROFİL AVATARINI SEÇ':(g==='erkek'?'ERKEK AVATARLARI':'KADIN AVATARLARI');
  const grid=$('avatarGrid');grid.replaceChildren();
- $('avatarHint').textContent=imgs.length+' avatar hazır · Görsele dokunarak seçebilirsin.';
+ $('avatarHint').textContent=profile?'Seçtiğin avatar kendi hesabına kaydedilecek.':imgs.length+' avatar hazır · Görsele dokunarak seçebilirsin.';
  for(const a of imgs){
-  const btn=document.createElement('button');btn.type='button';btn.className='thumb'+(avatarPick.url===a.url?' chosen':'');btn.setAttribute('aria-label','Avatarı seç');
-  appendImage(btn,a.url,'contain');btn.onclick=()=>{avatarPick={gender:g,url:a.url};writeLocal('avatar',avatarPick);closeAvatar();const row=getScene('Kayıt');if(row&&current==='Kayıt')renderScene(row)};grid.append(btn)
+  const btn=document.createElement('button');btn.type='button';btn.className='thumb'+((profile?activePlayerAvatarUrl():avatarPick.url)===a.url?' chosen':'');btn.setAttribute('aria-label','Avatarı seç');
+  appendImage(btn,a.url,'contain');
+  btn.onclick=async()=>{
+   if(profile){
+    if(profileAvatarSaving)return;
+    profileAvatarSaving=true;
+    for(const b of grid.querySelectorAll('button'))b.disabled=true;
+    $('avatarHint').textContent='Avatar hesabına kaydediliyor…';
+    try{await persistPlayerAvatarChoice(g,a.url);closeAvatar();note('Profil avatarın hesabına kaydedildi.');}
+    catch(err){$('avatarHint').textContent='Kaydedilemedi: '+String(err.message||err);note('Avatar kaydedilemedi: '+String(err.message||err),5000)}
+    finally{profileAvatarSaving=false;for(const b of grid.querySelectorAll('button'))b.disabled=false}
+   }else{
+    avatarPick={gender:g,url:a.url};writeLocal('avatar',avatarPick);closeAvatar();
+    const row=getScene('Kayıt');if(row&&current==='Kayıt')renderScene(row);
+   }
+  };
+  grid.append(btn);
  }
  $('avatarModal').hidden=false;
 }
@@ -860,7 +911,7 @@ async function finishBoot(){
    else if(hasAuth&&getMainScene())goTo(getMainScene().page_name,true);
    else goTo(bundle.scenes.find(x=>!['Karşılama','Yükleme'].includes(x.page_name))?.page_name||homeName(),true);
    startBackgroundChecks();
-   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,applyPrepared:applyPreparedLive,isRealtimeConnected:()=>liveSocketReady,status:()=>({...dl}),getAuth:()=>!!auth.active,getPlayerAvatarUrl:activePlayerAvatarUrl,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
+   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,applyPrepared:applyPreparedLive,isRealtimeConnected:()=>liveSocketReady,status:()=>({...dl}),getAuth:()=>!!auth.active,getPlayerAvatarUrl:activePlayerAvatarUrl,openProfileAvatarSelector,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
  }catch(err){
    console.warn('TTO: eksik dosyayla girişe izin verilmedi:',err);
    dl.state='error';dl.speed=0;patchMetrics();
@@ -881,7 +932,7 @@ async function start(){
  }catch(err){console.warn('TTO başlatma hatası:',err);note('Oyuncu başlatılamadı: '+err.message,10000)}
 }
 $('retryLoad').onclick=()=>void finishBoot();
-$('sceneMenuBtn').onclick=()=>{};$('closeMenu').onclick=closeMenu;$('closeAvatar').onclick=closeAvatar;$('nextButton').onclick=nextScene;
+$('sceneMenuBtn').onclick=()=>{};$('closeMenu').onclick=closeMenu;$('closeAvatar').onclick=closeAvatar;$('avatarProfileMale').onclick=()=>openAvatar('erkek','profile');$('avatarProfileFemale').onclick=()=>openAvatar('kadin','profile');$('nextButton').onclick=nextScene;
 $('logoutBtn').onclick=()=>void doLogout();$('enterGameBtn').onclick=()=>{enterPublishedHome()};
 window.addEventListener('resize',()=>{if(!document.activeElement?.classList?.contains('scene-input'))updateStageFit();fitText();/* Keep focused form controls mounted while Android keyboard changes viewport size. */});
 window.TTOEngineAudit={check:ttoAuditSceneBundle,version:TTO_ENGINE_VERSION,supportedKinds:[...TTO_SUPPORTED_KINDS],supportedActions:[...TTO_SUPPORTED_ACTIONS],supportedCapabilities:[...TTO_SUPPORTED_CAPABILITIES]};
