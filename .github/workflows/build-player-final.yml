@@ -1,0 +1,149 @@
+name: TTO Oyuncu 1.7 Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'player-android/**'
+      - '.github/workflows/build-player-final.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android API 36
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+
+      - name: Embed welcome and loading screen art
+        run: |
+          set -euo pipefail
+          mkdir -p player-android/www/assets
+          curl -fSL --retry 4 --retry-delay 3 \
+            'https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/kars-lama-86db67fd.jpg' \
+            -o player-android/www/assets/welcome-default.jpg
+          curl -fSL --retry 4 --retry-delay 3 \
+            'https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/yukleme-eded4ee7.jpg' \
+            -o player-android/www/assets/loading-default.jpg
+          test -s player-android/www/assets/welcome-default.jpg
+          test -s player-android/www/assets/loading-default.jpg
+          grep -q 'TTO_EMBEDDED_BACKGROUND' player-android/www/index.html
+          echo "Embedded files ready."
+
+      - name: Install Capacitor and create Android project
+        working-directory: player-android
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+
+      - name: Portrait and fullscreen Android configuration
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest=Path('player-android/android/app/src/main/AndroidManifest.xml')
+          s=manifest.read_text()
+          assert 'android:name=".MainActivity"' in s, 'MainActivity not found'
+          s=s.replace('android:name=".MainActivity"', 'android:name=".MainActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize"',1)
+          assert 'android.permission.INTERNET' in s, 'Internet permission missing'
+          manifest.write_text(s)
+          main=Path('player-android/android/app/src/main/java/com/tto/oyuncu/MainActivity.java')
+          main.parent.mkdir(parents=True,exist_ok=True)
+          main.write_text("""package com.tto.oyuncu;
+
+          import android.os.Bundle;
+          import android.view.View;
+          import android.view.WindowManager;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            @Override public void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+              setImmersive();
+            }
+            @SuppressWarnings("deprecation")
+            private void setImmersive() {
+              getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+              getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+              getWindow().getDecorView().setSystemUiVisibility(
+                  View.SYSTEM_UI_FLAG_FULLSCREEN |
+                  View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                  View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+                  View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                  View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                  View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+            }
+            @Override public void onWindowFocusChanged(boolean hasFocus) {
+              super.onWindowFocusChanged(hasFocus);
+              if (hasFocus) setImmersive();
+            }
+          }
+          """)
+          gradle=Path('player-android/android/app/build.gradle')
+          g=gradle.read_text()
+          g=g.replace('versionCode 1', 'versionCode 17',1)
+          g=g.replace('versionName "1.0"', 'versionName "1.7.0"',1)
+          gradle.write_text(g)
+          print('Portrait, fullscreen and version settings done.')
+          PY
+
+      - name: Build Android installable APK
+        working-directory: player-android/android
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Check APK output
+        run: |
+          set -euo pipefail
+          test -s player-android/android/app/build/outputs/apk/debug/app-debug.apk
+          cp player-android/android/app/build/outputs/apk/debug/app-debug.apk TTO-Oyuncu-v1.7.0.apk
+          sha256sum TTO-Oyuncu-v1.7.0.apk
+          ls -lh TTO-Oyuncu-v1.7.0.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Oyuncu-v1.7.0-APK
+          path: TTO-Oyuncu-v1.7.0.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish APK download link
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=tto-oyuncu-v1.7.0
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" TTO-Oyuncu-v1.7.0.apk --clobber
+          else
+            gh release create "$TAG" TTO-Oyuncu-v1.7.0.apk \
+              --target "$GITHUB_SHA" \
+              --title "TTO Oyuncu 1.7.0 - Android APK" \
+              --notes "Kurulabilir Android APK. Capacitor 8; tam ekran ve dikey. Karşılama ve yükleme görselleri APK içinde. Yeni sahneler uyumluysa uzaktan güncellenir. Bu APK debug imzalıdır; Google Play üretim imzası değildir."
+          fi
