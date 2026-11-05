@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#07121d">
-<title>Türkiye Ticaret Online · Oyuncu APK v1.8</title>
+<title>Türkiye Ticaret Online · Oyuncu v1.9</title>
 <style>
 :root{color-scheme:dark;--gold:#e4be7e;--cream:#fff0ce;--blue:#89aac7;--surface:#091a2c;--ease:cubic-bezier(.2,.7,.2,1)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040b12;color:var(--cream);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.52;cursor:wait}
@@ -140,7 +140,11 @@ body{display:block!important;background:#06101c!important}
 @media (orientation:landscape){.layer[data-kind="text"]{letter-spacing:0;} }
 
 
-/* v1.8: never add visual elements outside the editor-published scene */
+/* v1.9: panorama is a published background, not an extra UI control. */
+#scene>.tto-panorama-bg{position:absolute;top:0;bottom:0;z-index:0;pointer-events:none;background-repeat:no-repeat;will-change:left;}
+#scene[data-panorama="true"]{touch-action:pan-y;}
+#scene[data-panorama="true"] #layers{z-index:1;}
+/* v1.8: published scene owns every normal visible UI element; no extra visual overlays. */
 #scene:before,.old-scene:before{display:none!important}
 /* v1.4: loading barrier; never advance with half-downloaded galleries */
 #loadGate{position:absolute;z-index:15;left:5%;right:5%;top:32%;bottom:auto;display:flex;flex-direction:column;gap:9px;align-items:center;padding:10px 12px 12px;background:linear-gradient(155deg,#071522ed,#122b3eef);border:1px solid #d9b77b78;border-radius:13px;box-shadow:0 7px 25px #0009;text-align:center}
@@ -181,10 +185,10 @@ body{display:block!important;background:#06101c!important}
 'use strict';
 (()=>{
 /* TTO shared player engine contract v1.7 — identical in Yönetici/Oyuncu. */
-const TTO_ENGINE_VERSION='1.7.0';
+const TTO_ENGINE_VERSION='1.9.0';
 const TTO_SUPPORTED_KINDS=new Set(['background','panel','card','decor','text','label','heading','button','input','select','date','slider','toggle','checkbox','radio','progress','ring','stat','avatar','image','social']);
 const TTO_SUPPORTED_ACTIONS=new Set(['none','message','page','toggle','counter','link','social-link','auth-login-preview','auth-register-preview']);
-const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1']);
+const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1','scene.background.pan.v1']);
 // A game mechanic is not supported simply because its visual controls can be rendered.
 const TTO_SUPPORTED_GAME_MECHANICS=new Set([]);
 const TTO_ANDROID_PERMISSIONS=new Set([]);
@@ -224,6 +228,11 @@ function ttoAuditSceneBundle(input){
    if(!c||typeof c!=='object'){add('content',name+' — geçersiz UI elemanı');continue}
    const kind=String(c.kind||c.type||'').toLowerCase(),action=String(c.action||'none').trim();
    const label=String(c.text||c.id||kind).slice(0,34);
+   if(kind==='background'&&c.backgroundScroll==='horizontal'){
+    if(!String(c.src||'').trim())add('content',name+' — panorama görseli bulunmuyor');
+    const w=Number(c.backgroundWidthPercent??200),p=Number(c.backgroundStartPercent??50),speed=Number(c.backgroundScrollSensitivity??1);
+    if(!Number.isFinite(w)||w<200||w>600||!Number.isFinite(p)||p<0||p>100||!Number.isFinite(speed)||speed<.25||speed>3) add('content',name+' — panorama genişliği, başlangıç konumu veya hassasiyeti geçersiz');
+   }
    if(!TTO_SUPPORTED_KINDS.has(kind))add('engine',name+' — desteklenmeyen UI elemanı: '+(kind||'(tür yok)')+' ('+label+')');
    if(!TTO_SUPPORTED_ACTIONS.has(action))add('engine',name+' — desteklenmeyen eylem: '+action+' ('+label+')');
    if(c.id){if(seenElements.has(c.id))warnings.push(name+' — aynı kimlikle birden fazla UI elemanı: '+c.id);seenElements.add(c.id)}
@@ -238,7 +247,7 @@ function ttoAuditSceneBundle(input){
  const unique=a=>[...new Set(a)];
  return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
 }
-const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'1.7.0'});
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'1.9.0'});
 const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
 const DESIGN_W=390,DESIGN_H=844;
 function updateStageFit(){
@@ -351,22 +360,64 @@ const hasUserReducedMotion=()=>window.matchMedia&&matchMedia('(prefers-reduced-m
 function metric(k){switch(k){case'downloadPercent':return dl.total?String(Math.round(100*dl.loaded/dl.total))+'%':(dl.state==='done'?'100%':'0%');case'downloadSpeed':return fmtBytes(dl.speed)+'/sn';case'downloadTotal':return fmtBytes(dl.total);case'downloadLoaded':return fmtBytes(dl.loaded);default:return '—'}}
 function patchMetrics(){const stage=$('scene');stage.querySelectorAll('[data-metric]:not([data-metric=""])').forEach(el=>{const k=el.dataset.metric;if(!['downloadPercent','downloadSpeed','downloadTotal','downloadLoaded'].includes(k))return;if(el.dataset.kind==='ring'){const pct=dl.total?Math.min(100,100*dl.loaded/dl.total):(dl.state==='done'?100:0);el.style.setProperty('--ring-pct',pct+'%');(el.querySelector('.ring-value')||el).textContent=Math.round(pct)+'%'}else{const n=el.querySelector('.value');if(n)n.textContent=metric(k);else el.textContent=metric(k)}})}
 function clamp(n,min,max){n=Number(n);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):min}
+function setupPanorama(root,bg){
+ // Reproduce manager v2.46's rendering equation exactly: (width-100)*start/100.
+ const width=clamp(bg.backgroundWidthPercent??200,200,600);
+ const sensitivity=clamp(bg.backgroundScrollSensitivity??1,.25,3);
+ const imagePosition=['center','top','bottom','left','right'].includes(bg.backgroundPosition)?bg.backgroundPosition:'center';
+ const shade=clamp(bg.backgroundShade??.18,0,.85);
+ const controller=new AbortController();root.__panoramaController=controller;
+ const layer=document.createElement('div');layer.className='tto-panorama-bg';layer.setAttribute('aria-hidden','true');
+ layer.style.width=width+'%';layer.style.backgroundSize='100% 100%, cover';layer.style.backgroundPosition='center, '+imagePosition;
+ root.insertBefore(layer,root.firstChild);
+ root.dataset.panorama='true';root.style.touchAction='pan-y';
+ let percent=clamp(bg.backgroundStartPercent??50,0,100),drag=null;
+ const apply=()=>{layer.style.left=(-(width-100)*percent/100)+'%';root.dataset.panPercent=String(percent)};
+ apply();
+ const isControl=target=>!!target?.closest?.('button,input,textarea,select,a,[role="button"],[data-kind="button"],[data-kind="avatar"],[data-kind="social"],[data-kind="input"],[data-kind="toggle"],[data-kind="select"],[data-kind="date"],[data-kind="slider"],[data-kind="checkbox"],[data-kind="radio"]');
+ root.addEventListener('pointerdown',ev=>{
+  if(ev.isPrimary===false||(ev.pointerType==='mouse'&&ev.button!==0)||isControl(ev.target))return;
+  drag={id:ev.pointerId,startX:ev.clientX,start:percent};
+  try{root.setPointerCapture(ev.pointerId)}catch(_){}
+ },{signal:controller.signal});
+ root.addEventListener('pointermove',ev=>{
+  if(!drag||drag.id!==ev.pointerId)return;
+  const travel=root.clientWidth*(width/100-1);
+  if(travel<1)return;
+  percent=clamp(drag.start-(ev.clientX-drag.startX)*100/travel*sensitivity,0,100);
+  apply();
+  ev.preventDefault();
+ },{signal:controller.signal});
+ const stop=ev=>{
+  if(!drag||drag.id!==ev.pointerId)return;drag=null;
+  try{root.releasePointerCapture(ev.pointerId)}catch(_){}
+ };
+ root.addEventListener('pointerup',stop,{signal:controller.signal});root.addEventListener('pointercancel',stop,{signal:controller.signal});
+ return {layer,shade};
+}
 function fillBackground(scene){
  const bg=scene.scene_data,el=$('scene'),outer=$('sceneBackdrop');
+ el.__panoramaController?.abort();el.__panoramaController=null;
+ el.querySelector(':scope > .tto-panorama-bg')?.remove();el.dataset.panorama='false';el.removeAttribute('data-pan-percent');el.style.touchAction='';
  const base=typeof bg.background==='string'?bg.background:'#081626';
  el.style.background=base;el.style.backgroundImage='';
  if(outer){outer.style.background=base;outer.style.backgroundImage='';}
  const c=(bg.components||[]).find(x=>(x.kind||x.type)==='background'&&x.visible!==false);
  if(!c?.src||!allowAssetUrl(c.src))return;
- const shade=clamp(c.backgroundShade||0,0,.8);
- // Respect the background sizing published by the manager (including intentional stretching).
+ const shade=clamp(c.backgroundShade??0,0,.85);
+ // The editor owns image fit; do not override a published 100% 100% or contain setting.
  const fit=['cover','contain','100% 100%'].includes(c.backgroundFit)?c.backgroundFit:'cover';
  const pos=['center','top','bottom','left','right'].includes(c.backgroundPosition)?c.backgroundPosition:'center';
+ const panorama=c.backgroundScroll==='horizontal'?setupPanorama(el,c):null;
  const paint=(u)=>{
   const shadeLayer=`linear-gradient(rgba(3,10,24,${shade}),rgba(3,10,24,${shade}))`;
-  el.style.backgroundImage=shadeLayer+',url("'+u+'")';
-  el.style.backgroundSize='100% 100%, '+fit;
-  el.style.backgroundPosition='center, '+pos;
+  if(panorama){
+   // The authored image alone moves; scene children remain at fixed coordinates.
+   panorama.layer.style.backgroundImage=shadeLayer+',url("'+u+'")';
+   el.style.backgroundImage='none';
+  }else el.style.backgroundImage=shadeLayer+',url("'+u+'")';
+  if(!panorama)el.style.backgroundSize='100% 100%, '+fit;
+  if(!panorama)el.style.backgroundPosition='center, '+pos;
   el.style.backgroundRepeat='no-repeat';
   if(outer){outer.style.backgroundImage=`linear-gradient(rgba(4,12,24,.23),rgba(4,12,24,.23)),url("${u}")`;outer.style.backgroundSize='cover';outer.style.backgroundPosition='center';outer.style.backgroundRepeat='no-repeat'}
  };
