@@ -1,0 +1,100 @@
+name: TTO Oyuncu Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'player/index.html'
+      - '.github/workflows/build-player-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-player-apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Kaynak kodunu al
+        uses: actions/checkout@v4
+
+      - name: Oyuncu HTML kaynagini denetle
+        run: |
+          set -euo pipefail
+          test -s player/index.html
+          grep -qi '<html' player/index.html
+          mkdir -p player-build/www
+          cp player/index.html player-build/www/index.html
+
+      - name: Node.js 22 kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Java 21 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v4
+
+      - name: Android platform paketlerini kur
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools'
+
+      - name: Capacitor oyuncu projesini hazirla
+        working-directory: player-build
+        env:
+          PLAYER_APP_ID: ${{ vars.TTO_PLAYER_APP_ID || 'com.tto.oyuncu' }}
+        run: |
+          set -euo pipefail
+          cat > package.json <<'EOF'
+          {
+            "name": "tto-oyuncu",
+            "version": "2.4.0",
+            "private": true,
+            "type": "module",
+            "dependencies": {
+              "@capacitor/core": "^7.0.0",
+              "@capacitor/android": "^7.0.0"
+            },
+            "devDependencies": {
+              "@capacitor/cli": "^7.0.0"
+            }
+          }
+          EOF
+          node -e 'const fs=require("fs"); const id=process.env.PLAYER_APP_ID; if(!/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)+$/.test(id)) process.exit(2); fs.writeFileSync("capacitor.config.json",JSON.stringify({appId:id,appName:"Türkiye Ticaret Online Oyuncu",webDir:"www",server:{androidScheme:"https"}},null,2))'
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+
+      - name: Dikey ekran kilidini uygula
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('player-build/android/app/src/main/AndroidManifest.xml')
+          t = p.read_text()
+          if 'android:screenOrientation=' not in t:
+              t = t.replace('android:name=".MainActivity"', 'android:name=".MainActivity" android:screenOrientation="portrait"')
+          p.write_text(t)
+          assert 'android:screenOrientation="portrait"' in t, 'Dikey ekran ayari yapilamadi'
+          PY
+
+      - name: Debug APK derle
+        working-directory: player-build/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: APK ciktisini kontrol et
+        run: test -s player-build/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Oyuncu APK dosyasini yayinla
+        uses: actions/upload-artifact@v4
+        with:
+          name: TTO-Oyuncu-v2.4-Debug-APK
+          path: player-build/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
