@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#07121d">
+<title>Türkiye Ticaret Online · Oyuncu v2.3 Profil Avatarı</title>
+<style>
+:root{color-scheme:dark;--gold:#e4be7e;--cream:#fff0ce;--blue:#89aac7;--surface:#091a2c;--ease:cubic-bezier(.2,.7,.2,1)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040b12;color:var(--cream);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.52;cursor:wait}
+#app{position:relative;width:100%;height:100dvh;min-height:0;margin:auto;background:linear-gradient(145deg,#101f31,#030810);overflow:hidden;isolation:isolate}
+/* Fullscreen player: no desktop/tablet device mockup at any viewport */
+html,body{width:100%;min-height:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+body{display:block!important;background:#06101c!important}
+#app{position:fixed;inset:0;width:100vw!important;width:100dvw!important;height:100vh!important;height:100dvh!important;max-width:none!important;max-height:none!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+#controls,#sceneMenu,#statusWrap,#nextButton{display:none!important}
+#scene,.old-scene{border:0!important;border-radius:0!important}
+
+#scene,.old-scene{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#081626}
+#scene:before,.old-scene:before{content:"";position:absolute;z-index:0;inset:-4%;pointer-events:none;background:radial-gradient(circle at 15% 12%,#eccd8140,transparent 28%),radial-gradient(circle at 92% 72%,#478cbc22,transparent 22%);animation:halo 7s ease-in-out infinite}
+#scene[data-fx="gateway"]:before{background:radial-gradient(circle at 50% 4%,#e9ba7540,transparent 22%),radial-gradient(circle at 80% 80%,#398cce24,transparent 30%)}
+#scene[data-fx="transfer"]:before{background:radial-gradient(circle at 50% 70%,#dbac652a,transparent 33%)}
+#layers{position:absolute;inset:0;z-index:1;overflow:hidden}
+.layer{position:absolute;min-width:0;box-sizing:border-box;display:flex;justify-content:center;align-items:center;text-align:center;overflow:hidden;isolation:isolate;line-height:1.12;overflow-wrap:anywhere}
+.layer[data-kind="card"],.layer[data-kind="panel"]{border:1px solid #d3a86c88;background:linear-gradient(152deg,#305069cb,#0a2038e6 44%,#07111ce6);box-shadow:inset 0 1px #ffffff29,0 13px 35px #0007,0 0 18px #f3c98a18;backdrop-filter:blur(9px)}
+.layer[data-kind="panel"][data-variant="soft"]{background:linear-gradient(160deg,#1b324cb8,#081522c8 68%,#193045bb)}
+.layer[data-kind="panel"][data-variant="glass"]{background:linear-gradient(140deg,#3156788a,#071a2ca8 72%);border-color:#edd1a77a}
+.layer[data-kind="label"],.layer[data-kind="heading"],.layer[data-kind="text"]{background:transparent!important;border:0!important;text-shadow:0 2px 8px #000a;letter-spacing:.12px}
+.layer[data-kind="decor"]{border:0!important;background:linear-gradient(90deg,transparent,#f7d18b8e,transparent)!important;box-shadow:0 0 16px #f3bf644f;pointer-events:none}
+.layer[data-kind="button"]{cursor:pointer;border:1px solid #e6b977a8;padding:1px 5px;color:#f9e6c4;background:linear-gradient(155deg,#1d3a52,#091726 65%);box-shadow:inset 0 1px #fff2cb41,0 7px 15px #0007,0 0 12px #eec47c22;transition:filter .17s}
+.layer[data-kind="button"]:active,.layer[data-kind="social"]:active{filter:brightness(1.3);transform:scale(.985)}
+.layer[data-kind="button"][data-variant="solid"]{color:#201607!important;border-color:#ffe0a7;background:linear-gradient(#ffe6ae,#d4a15e 55%,#a06a35);text-shadow:0 1px 0 #ffdc9466;font-weight:900;box-shadow:inset 0 2px #fff5d2,0 8px 18px #0008}
+.layer[data-kind="button"][data-variant="outline"]{border-width:1.5px;background:linear-gradient(165deg,#223d55d9,#061725f2)}
+.layer[data-motion="shine"]{background-image:linear-gradient(120deg,transparent,#ffffff0c,transparent);}
+.layer[data-motion="breathe"]{animation:breathe 4.6s ease-in-out infinite}
+.layer[data-kind="select"],.layer[data-kind="date"],.layer[data-kind="input"]{padding:0!important;border:1px solid #b28c5994;background:linear-gradient(160deg,#12304eaa,#071724ed);box-shadow:inset 0 1px #ffebb320}
+.layer input.scene-input{width:100%;height:100%;background:transparent;border:0;outline:0;color:#fff3d9;padding:0 10px;min-width:0;font-size:inherit}
+.layer input.scene-input::placeholder{color:#c0b7aa}
+.layer input.scene-input:focus{box-shadow:inset 0 0 0 1px #e6bd80}
+.layer[data-kind="input"]:focus-within{border-color:#f8d6a5}
+.eye{flex:none;position:absolute;z-index:2;right:4px;top:50%;transform:translateY(-50%);width:29px;height:calc(100% - 8px);display:grid;place-items:center;color:#f6d5a3;background:#122c43;border:1px solid #d8ab69a6;border-radius:8px;padding:0;cursor:pointer}
+.layer[data-kind="toggle"]{gap:7px;justify-content:flex-start;overflow:visible;background:none!important;border:0!important;color:#f8dcaa}
+.layer[data-kind="toggle"] input{appearance:none;position:relative;width:34px;height:19px;border-radius:22px;background:#253d50;border:1px solid #7c8792;flex:none;cursor:pointer}
+.layer[data-kind="toggle"] input:after{content:"";position:absolute;width:13px;height:13px;border-radius:50%;left:2px;top:2px;background:#a8b7c6;transition:transform .2s}
+.layer[data-kind="toggle"] input:checked{background:#98703c;border-color:#f4cd8c}.layer[data-kind="toggle"] input:checked:after{transform:translateX(15px);background:#fff0c9}
+.layer[data-kind="avatar"]{background:#091b2e;border:1.5px solid #d8ad7a;box-shadow:0 8px 22px #0009;overflow:hidden;cursor:pointer;padding:0!important}
+.layer[data-kind="avatar"].selected{outline:2px solid #fff1c4;outline-offset:2px;box-shadow:0 0 17px #ddac60a1}
+.layer[data-kind="avatar"] img{display:block;width:100%;height:100%;object-fit:fill;object-position:center;pointer-events:none}
+.layer[data-kind="social"]{padding:0!important;background:linear-gradient(145deg,#203952,#071522);border:1px solid #d9b677;box-shadow:0 4px 13px #0007;cursor:pointer}
+.layer[data-kind="social"] img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.layer[data-kind="ring"]{background:radial-gradient(circle closest-side,#0b1a2e 71%,transparent 73%),conic-gradient(#ebc580 0 var(--ring-pct),#29445d var(--ring-pct) 100%);border:1px solid #f3cc8d;color:#fff1cb;border-radius:50%!important;font-weight:950;box-shadow:0 0 28px #efc77c48,inset 0 0 16px #000a}
+.layer[data-kind="progress"]{background:linear-gradient(#11283b,#05111f);border:1px solid #ae8759}
+.meter-rail{width:calc(100% - 8px);height:34%;border:1px solid #c9a36c;background:#081320;position:absolute;bottom:5px;border-radius:99px;overflow:hidden}.meter-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,#997141,#fee1a0);box-shadow:0 0 9px #fcd597;transition:width .25s}
+.metric{flex-direction:column!important;gap:5px;line-height:1.1}.metric .label{font-size:.76em;color:#d8c6a6;letter-spacing:.4px;font-weight:700}.metric .value{font-size:1.12em;color:#ffddb0;font-weight:900;white-space:nowrap}
+#scene[data-fx="transfer"] .layer[data-kind="ring"]{animation:halo-ring 4s ease-in-out infinite}
+.old-scene.snapshot-out{position:absolute;inset:0;z-index:5;pointer-events:none}
+#scene.enter-fx{z-index:2}
+.old-scene.snapshot-out.out-left{animation:exit-left var(--duration) var(--ease) forwards}
+.old-scene.snapshot-out.out-right{animation:exit-right var(--duration) var(--ease) forwards}
+.old-scene.snapshot-out.out-fade{animation:exit-fade var(--duration) var(--ease) forwards}
+.old-scene.snapshot-out.out-zoom{animation:exit-zoom var(--duration) var(--ease) forwards}
+#scene.enter-fx.in-left{animation:enter-left var(--duration) var(--ease) both}
+#scene.enter-fx.in-right{animation:enter-right var(--duration) var(--ease) both}
+#scene.enter-fx.in-fade{animation:enter-fade var(--duration) var(--ease) both}
+#scene.enter-fx.in-zoom{animation:enter-zoom var(--duration) var(--ease) both}
+@keyframes enter-left{from{transform:translateX(100%);opacity:.8}to{transform:translateX(0);opacity:1}}
+@keyframes enter-right{from{transform:translateX(-100%);opacity:.8}to{transform:translateX(0);opacity:1}}
+@keyframes exit-left{to{transform:translateX(-100%);opacity:.4}}@keyframes exit-right{to{transform:translateX(100%);opacity:.4}}
+@keyframes enter-fade{from{opacity:0;filter:blur(4px)}to{opacity:1;filter:blur(0)}}@keyframes exit-fade{to{opacity:0;filter:blur(4px)}}
+@keyframes enter-zoom{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}@keyframes exit-zoom{to{opacity:0;transform:scale(1.13)}}
+@keyframes halo{50%{opacity:.55;transform:scale(1.02)}}@keyframes breathe{50%{transform:translateY(-1px);filter:brightness(1.07)}}@keyframes halo-ring{50%{box-shadow:0 0 36px #e9bd7c76}}
+#controls{position:absolute;z-index:10;top:max(9px,env(safe-area-inset-top));right:max(9px,env(safe-area-inset-right));display:flex;gap:6px}
+#sceneMenuBtn{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;color:#f0d6ab;background:#0b2337e8;border:1px solid #b99962aa;box-shadow:0 4px 15px #0007;cursor:pointer;font-size:19px}
+#sceneMenuBtn:focus-visible,.modalClose:focus-visible,.thumb:focus-visible{outline:2px solid #ffd996;outline-offset:2px}
+#statusWrap{position:absolute;z-index:9;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 24px);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px}
+#syncState{background:#061927d9;max-width:100%;padding:7px 12px;border:1px solid #edcc8b45;border-radius:99px;font-size:10px;line-height:1.2;color:#d2e3e9;text-align:center;box-shadow:0 3px 12px #0008;overflow-wrap:anywhere;transition:opacity .2s}
+#syncState.idle{opacity:.65}#syncState.ready{border-color:#64d0b15a;color:#c8ffe7}#syncState.warn{border-color:#dfb07055;color:#ffe3b2}
+#notice{position:absolute;z-index:40;left:6%;right:6%;bottom:max(64px,env(safe-area-inset-bottom) + 50px);background:#0b2438f2;border:1px solid #d0ae79;padding:12px 14px;border-radius:13px;text-align:center;color:#fff2d2;box-shadow:0 12px 35px #000b;font-size:12px;line-height:1.5;transition:opacity .2s}#notice[hidden]{display:none}
+#sceneMenu,#avatarModal{position:absolute;z-index:30;inset:0;background:#040d16ed;backdrop-filter:blur(13px);padding:max(25px,env(safe-area-inset-top)) 17px max(18px,env(safe-area-inset-bottom));overflow-y:auto}
+#sceneMenu[hidden],#avatarModal[hidden]{display:none}
+.modalHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px 16px;border-bottom:1px solid #dfba7655}
+.modalTitle{font-size:16px;font-weight:950;letter-spacing:.6px;color:#fbe1b1}.modalSub{font-size:11px;color:#9fb9cb;line-height:1.5;margin:7px 0}
+.modalClose{background:#1a344b;border:1px solid #d4b176;border-radius:10px;color:#fbe1b6;font-size:21px;width:38px;height:38px;cursor:pointer}
+#sceneButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:17px}
+.pickPage{border:1px solid #ac9062;background:linear-gradient(135deg,#1a374c,#091d2d);color:#fbe6bf;border-radius:12px;min-height:65px;padding:9px;text-align:left;font-size:12px;cursor:pointer}
+.pickPage strong{display:block;font-size:13px}.pickPage small{display:block;margin-top:5px;color:#abc7d8;font-size:9px}
+.pickPage.active{background:linear-gradient(140deg,#75512c,#211a17);border-color:#ffe2a4}
+.menuHint{font-size:11px;line-height:1.6;margin:17px 0;color:#9eb2c2}
+#avatarGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px}
+.thumb{position:relative;display:block;padding:0;aspect-ratio:3/4;border:1px solid #d6ad75;border-radius:13px;background:#0b2032;cursor:pointer;overflow:hidden}
+.thumb img{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain;object-position:center;display:block;pointer-events:none;min-width:0;min-height:0}.thumb.chosen{border:2px solid #ffe4a8;box-shadow:0 0 16px #f5d18e80}
+#nextButton{position:absolute;z-index:8;left:50%;bottom:13%;transform:translateX(-50%);padding:10px 20px;border:1px solid #f0d9a7;border-radius:999px;background:linear-gradient(180deg,#fbe2aa,#b98547);font-size:11px;font-weight:900;color:#1f170f;box-shadow:0 6px 22px #0009;cursor:pointer;white-space:nowrap}
+#nextButton[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Authenticated player landing: only used while an actual main menu is not published */
+#playerHome{position:absolute;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 23px max(24px,env(safe-area-inset-bottom));background:radial-gradient(ellipse at 50% 12%,#1b3451 0%,#091828 47%,#030911 100%);text-align:center}
+#playerHome[hidden]{display:none!important}
+.player-home-card{width:min(100%,420px);border:1px solid #d6b577b8;border-radius:26px;background:linear-gradient(155deg,#29445a9c,#0c1f32ee 46%,#081420ee);padding:clamp(24px,5vw,40px) 21px;box-shadow:inset 0 1px #ffedbf55,0 25px 75px #0009}
+.home-logo{font-size:45px;color:#f0cb87;font-family:Georgia,serif;letter-spacing:3px;font-weight:950;text-shadow:0 0 17px #e3ba7777}
+.home-caption{font-size:10px;letter-spacing:2.4px;color:#c9b58a;font-weight:800}
+#playerAvatar{margin:18px auto 8px;width:93px;height:93px;border-radius:50%;overflow:hidden;display:grid;place-items:center;border:2px solid #e7c087;box-shadow:0 0 26px #e8c27c40;background:linear-gradient(140deg,#0c253c,#182c3d);font-size:34px}
+#playerAvatar img{width:100%;height:100%;object-fit:cover}
+#playerGreeting{font-size:19px;color:#fff0cc;font-weight:850;margin:8px 0}
+.home-copy{color:#b3c5d2;font-size:12px;line-height:1.65;max-width:330px;margin:8px auto 20px}
+.home-action{display:block;width:100%;padding:14px;border-radius:13px;border:1px solid #e9c384;background:linear-gradient(180deg,#f7dfae,#c08d4e);color:#22190d;font-size:13px;font-weight:900;cursor:pointer;margin-top:10px}
+.home-secondary{background:linear-gradient(150deg,#163149,#0a1b2c);color:#e8cc9c}
+.home-action[hidden]{display:none!important}
+/* Keep form readable and clickable even when the soft panels overlap it */
+.layer[data-kind="input"]{z-index:4}
+.layer[data-kind="button"],.layer[data-kind="toggle"],.layer[data-kind="avatar"],.layer[data-kind="social"]{z-index:5}
+.layer[data-kind="avatar"] img{object-fit:contain}
+@media (max-height:520px){#avatarModal{padding-top:12px}#avatarGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+
+/* TTO v1.2: one design-space, uniformly scaled, never stretch the UI coordinates */
+#sceneBackdrop{position:absolute;inset:-12%;z-index:0;pointer-events:none;background:#0a1b2a;background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;filter:blur(38px) brightness(.46) saturate(.9);transform:scale(1.075);opacity:.98;will-change:background-image}
+#designViewport{position:absolute;left:50%;top:50%;width:390px;height:844px;z-index:1;overflow:hidden;isolation:isolate;background:#081626;transform-origin:center center;transform:translate(-50%,-50%) scale(var(--tto-uniform-scale,1));box-shadow:0 0 70px rgba(0,0,0,.26)}
+#designViewport #scene,#designViewport .old-scene{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0;overflow:hidden}
+#designViewport .layer[data-kind="ring"]{aspect-ratio:1/1!important;flex:0 0 auto;position:absolute;isolation:isolate;border-radius:50%!important;background:conic-gradient(#ebc780 0 var(--ring-pct),#233b53 var(--ring-pct) 100%)!important;border:2px solid #e5c388!important;box-shadow:0 0 28px #efc77c3f,inset 0 1px #fff5db78!important}
+#designViewport .layer[data-kind="ring"]::before{content:"";position:absolute;inset:15%;border-radius:50%;z-index:0;background:radial-gradient(circle at 35% 24%,#17334c,#071729 80%);box-shadow:inset 0 0 16px #0008,0 0 0 1px #edcc8c22}
+#designViewport .ring-value{position:relative;z-index:1;display:grid;place-items:center;color:#fce6bc;text-shadow:0 2px 9px #000e;font-weight:950}
+#designViewport .layer[data-kind="progress"]{overflow:visible}
+#designViewport .layer[data-kind="text"].metric{overflow:hidden}
+#designViewport .layer[data-kind="input"] .scene-input{border-radius:inherit}
+@media(max-width:400px){#designViewport{box-shadow:none}}
+
+
+/* TTO v1.3: native full-bleed responsive scene, no inner 390×844 telephone canvas */
+#app{width:100vw!important;width:100dvw!important;height:100vh!important;height:100dvh!important;max-width:none!important;max-height:none!important;}
+#designViewport{position:absolute!important;inset:0!important;left:0!important;top:0!important;width:100%!important;height:100%!important;transform:none!important;transform-origin:top left!important;box-shadow:none!important;border-radius:0!important;overflow:hidden!important;}
+#sceneBackdrop{display:none!important;}
+#designViewport #scene,#designViewport .old-scene{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;}
+#scene{background-repeat:no-repeat;background-position:center center;background-size:cover;}
+#designViewport .layer[data-kind="ring"]{aspect-ratio:1 / 1!important;border-radius:50%!important;}
+#designViewport .layer[data-kind="avatar"]{overflow:hidden!important;}
+#designViewport .layer[data-kind="avatar"] img{width:100%!important;height:100%!important;object-fit:contain!important;}
+#designViewport .layer[data-kind="social"]{overflow:hidden!important;}
+#designViewport .layer[data-kind="social"] img{width:100%!important;height:100%!important;object-fit:contain!important;}
+@media (orientation:landscape){.layer[data-kind="text"]{letter-spacing:0;} }
+
+
+/* v1.9: panorama is a published background, not an extra UI control. */
+#scene>.tto-panorama-bg{position:absolute;top:0;bottom:0;z-index:0;pointer-events:none;background-repeat:no-repeat;will-change:left;}
+#scene[data-panorama="true"]{touch-action:pan-y;}
+#scene[data-panorama="true"] #layers{z-index:1;}
+/* v1.8: published scene owns every normal visible UI element; no extra visual overlays. */
+#scene:before,.old-scene:before{display:none!important}
+/* v1.4: loading barrier; never advance with half-downloaded galleries */
+#loadGate{position:absolute;z-index:15;left:5%;right:5%;top:32%;bottom:auto;display:flex;flex-direction:column;gap:9px;align-items:center;padding:10px 12px 12px;background:linear-gradient(155deg,#071522ed,#122b3eef);border:1px solid #d9b77b78;border-radius:13px;box-shadow:0 7px 25px #0009;text-align:center}
+#loadGate[hidden],#loadGate:not(.error){display:none!important}
+#loadGateLabel{font-size:12px;font-weight:800;color:#f8dda8}
+#loadGateInfo{font-size:10px;color:#c8d9e7;line-height:1.35}
+#loadGate button{border:1px solid #ffe4ae;background:linear-gradient(#f8daa4,#bc8546);border-radius:10px;color:#221409;font-weight:900;padding:10px 22px;cursor:pointer}
+#loadGate button[hidden]{display:none}
+#loadGate.error{border-color:#fca4a4aa}
+#loadGate.error #loadGateLabel{color:#ffd2c9}
+#avatarGrid .thumb img{position:absolute!important;inset:3px!important;width:calc(100% - 6px)!important;height:calc(100% - 6px)!important;object-fit:contain!important;object-position:center!important;max-width:none;max-height:none}
+
+/* v2.3: account-bound avatar selection for profiles with no saved registration avatar */
+#avatarProfileTabs{display:flex;gap:8px;margin-top:16px}
+#avatarProfileTabs[hidden]{display:none!important}
+#avatarProfileTabs button{flex:1;min-width:0;background:linear-gradient(155deg,#1b314b,#0d2031);border:1px solid #95784d;color:#ffdfa4;border-radius:10px;padding:12px 6px;font-size:12px;font-weight:750;cursor:pointer}
+#avatarProfileTabs button.active{border-color:#ffe0a2;background:linear-gradient(155deg,#80613a,#2c2630)}
+/* v2.2: image-only avatar from the authenticated player's account */
+.layer.player-avatar-button{display:grid!important;place-items:center!important;overflow:hidden!important;padding:0!important;background-image:none!important;}
+.layer.player-avatar-button img{display:block;width:100%;height:100%;max-height:100%;max-width:100%;object-fit:contain!important;object-position:center;pointer-events:none;user-select:none;}
+.layer .player-avatar-blank{display:block;width:47%;height:58%;max-width:54px;max-height:70px;background:linear-gradient(#e9c891,#c18b4b);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M3 21v-2a9 9 0 0 1 18 0v2z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M3 21v-2a9 9 0 0 1 18 0v2z'/%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none;}
+</style>
+</head>
+<body>
+<main id="app" aria-label="Türkiye Ticaret Online Oyuncu">
+ <div id="sceneBackdrop" aria-hidden="true"></div><div id="designViewport"><section id="scene" aria-label="Oyun ekranı"><div id="layers"></div></section></div>
+ <div id="controls"><button id="sceneMenuBtn" type="button" aria-label="Sahne listesini aç" title="Sahneler">☷</button></div>
+ <button id="nextButton" hidden type="button">DEVAM ET</button>
+ <div id="statusWrap"><div id="syncState" class="idle" role="status" aria-live="polite">Hazırlanıyor…</div></div>
+ <div id="notice" hidden role="status" aria-live="polite"></div>
+ <div id="loadGate" hidden role="alert" aria-live="assertive"><div id="loadGateLabel"></div><div id="loadGateInfo"></div><button id="retryLoad" hidden type="button">YENİDEN DENE</button></div>
+ <section id="playerHome" hidden aria-label="Oyuncu Paneli">
+  <div class="player-home-card">
+    <div class="home-logo">TTO</div><div class="home-caption">TÜRKİYE TİCARET ONLINE</div>
+    <div id="playerAvatar" aria-hidden="true">◆</div>
+    <div id="playerGreeting">OYUNCU PANELİ</div>
+    <p class="home-copy" id="homeInfo">Oturum açıldı. Yönetici tarafından yayınlanacak oyun menüsü bekleniyor.</p>
+    <button class="home-action" id="enterGameBtn" type="button">OYUNA DEVAM ET</button>
+    <button class="home-action home-secondary" id="logoutBtn" type="button">ÇIKIŞ YAP</button>
+  </div>
+ </section>
+ <section id="sceneMenu" hidden aria-label="Sahne Seçimi"><header class="modalHead"><div><div class="modalTitle">TTO · SAHNELER</div><div class="modalSub">Yönetici tarafından yayınlanan ekranlar</div></div><button class="modalClose" id="closeMenu" aria-label="Kapat">×</button></header><div id="sceneButtons"></div><p class="menuHint">Yönetici’de yayınlanan yeni sahneler, oyun çalışırken belirli aralıklarla kontrol edilip indirilir. Yeni paket uygulama yeniden açıldığında kullanılır.</p></section>
+ <section id="avatarModal" hidden aria-label="Avatar Galerisi"><header class="modalHead"><div><div class="modalTitle" id="avatarTitle">AVATAR SEÇ</div><div class="modalSub">Bir görsel seçmek için dokun</div></div><button class="modalClose" id="closeAvatar" aria-label="Kapat">×</button></header><div id="avatarProfileTabs" hidden role="group" aria-label="Avatar kategorisi"><button type="button" id="avatarProfileMale">Erkek avatarları</button><button type="button" id="avatarProfileFemale">Kadın avatarları</button></div><div id="avatarGrid"></div><p class="menuHint" id="avatarHint"></p></section>
+</main>
+<script id="builtInScenes" type="application/json">{"schema":"tto_player_scene_bundle_v1","scenes":[{"page_key":"page_mvzmdnpc_6ij5153v","draft_key":"draft_mvzmdnpc_bd4rdw6o","page_name":"Karşılama","published_at":"2026-11-04 15:27:00.485+00","scene_data":{"name":"Karşılama","schema":"tto_ui_scene_v1","sceneFx":"","sceneSkin":"","background":"#081626","components":[{"kind":"background","type":"background","x":0,"y":0,"width":100,"height":100,"text":"Sayfa Arka Planı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":0,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/kars-lama-86db67fd.jpg","assetPath":"ui/kars-lama-86db67fd.jpg","backgroundFit":"100% 100%","backgroundPosition":"center","backgroundShade":0.1,"visible":true}],"transition":{"ease":"ease-in-out","exit":"push-right","enter":"push-left","overlap":true,"duration":2000}}},{"page_key":"page_mvzo3d3l_86kpf40h","draft_key":"draft_mvzo3d3l_6ui7jii3","page_name":"Yükleme","published_at":"2026-11-04 15:26:56.748+00","scene_data":{"name":"Yükleme","schema":"tto_ui_scene_v1","sceneFx":"transfer","sceneSkin":"","background":"radial-gradient(circle at 50% 90%,rgba(255,219,145,.10),transparent 18%),linear-gradient(165deg,#09121e 0%,#122335 35%,#0a1320 100%)","components":[{"kind":"ring","type":"ring","x":34,"y":48.5315,"width":36,"height":21,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":21,"opacity":1,"radius":999,"variant":"neon","enabled":true,"value":68,"min":0,"max":100,"accent":"loading-minimal-ring","barStyle":"halo","metricKey":"downloadPercent"},{"kind":"text","type":"text","x":43.8343,"y":71.354,"width":18,"height":4.5,"text":"İndiriliyor…","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":11,"opacity":1,"radius":12,"variant":"glass","enabled":true,"fontWeight":"850","textAlign":"left"},{"kind":"panel","type":"panel","x":10.5691,"y":77.1826,"width":82,"height":16,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":12,"opacity":0.86,"radius":15,"variant":"glass","enabled":true},{"kind":"text","type":"text","x":15.0337,"y":79.0298,"width":25.3333,"height":11.8,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":11.3,"opacity":1,"radius":12,"variant":"glass","enabled":true,"metricKey":"downloadSpeed","metricLabel":"İNDİRME HIZI","compactMetric":true,"fontWeight":"900","textAlign":"center"},{"kind":"text","type":"text","x":40.7041,"y":79.0344,"width":25.3333,"height":11.8,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":11.3,"opacity":1,"radius":12,"variant":"glass","enabled":true,"metricKey":"downloadTotal","metricLabel":"TOPLAM DOSYA BOYUTU","compactMetric":true,"fontWeight":"900","textAlign":"center"},{"kind":"text","type":"text","x":65.588,"y":79.0257,"width":25.3333,"height":11.8,"text":"","premium":true,"skin":"obsidian","color":"#f9e6c4","fontSize":11.3,"opacity":1,"radius":12,"variant":"glass","enabled":true,"metricKey":"downloadLoaded","metricLabel":"İNDİRİLEN","compactMetric":true,"fontWeight":"900","textAlign":"center"},{"kind":"background","type":"background","x":0,"y":0,"width":100,"height":100,"text":"Sayfa Arka Planı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":0,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/yukleme-eded4ee7.jpg","assetPath":"ui/yukleme-eded4ee7.jpg","backgroundFit":"cover","backgroundPosition":"center","backgroundShade":0.18,"visible":true}],"transition":{"ease":"ease-in-out","exit":"push-right","enter":"push-left","overlap":true,"duration":2000},"loadingSource":{"bucket":"tto-loading","prefix":"","provider":"supabase-storage","speedMetric":"downloadSpeed","totalMetric":"downloadTotal","progressMetric":"downloadPercent","downloadedMetric":"downloadLoaded"}}},{"page_key":"page_mw16k3u1_a5a5hk4m","draft_key":"draft_mw16lbna_eaz2u4r6","page_name":"Kayıt","published_at":"2026-11-04 15:26:52.839+00","scene_data":{"name":"Kayıt","schema":"tto_ui_scene_v1","sceneFx":"gateway","sceneSkin":"royal","background":"radial-gradient(circle at 50% 50%,rgba(255,215,150,.08),transparent 35%),linear-gradient(135deg,#0b1625 0%,#102235 48%,#08101b 100%)","components":[{"kind":"panel","type":"panel","x":7,"y":13,"width":86,"height":82,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.45,"radius":30,"variant":"soft","enabled":true,"motion":"breathe"},{"kind":"decor","type":"decor","x":12,"y":13,"width":76,"height":1,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.6,"radius":22,"variant":"neon","enabled":true},{"kind":"text","type":"text","x":20,"y":16.2,"width":61,"height":5.5,"text":"OYUNCU HESABI OLUŞTUR","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":18,"opacity":1,"radius":12,"variant":"glass","enabled":true,"fontWeight":"950","textAlign":"center"},{"kind":"text","type":"text","x":20,"y":22.5,"width":60,"height":3.6,"text":"Avatarını seç ve ticaret yolculuğuna başla","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":9.5,"opacity":1,"radius":12,"variant":"glass","enabled":true,"textAlign":"center"},{"kind":"decor","type":"decor","x":12,"y":27.5,"width":76,"height":0.35,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":99,"variant":"neon","enabled":true,"motion":"shine"},{"kind":"avatar","type":"avatar","x":13,"y":30,"width":35,"height":13.8,"text":"ERKEK","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":16,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/avatars/erkek/avatar-5c117484.png","assetPath":"ui/avatars/erkek/avatar-5c117484.png","avatarGender":"erkek","avatarGallery":{"bucket":"tto-ui-assets","prefix":"ui/avatars/erkek/","provider":"supabase-storage","openOnDoubleTap":true}},{"kind":"avatar","type":"avatar","x":52,"y":30,"width":35,"height":13.8,"text":"KADIN","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":16,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/avatars/kadin/avatar-239d2336.png","assetPath":"ui/avatars/kadin/avatar-239d2336.png","avatarGender":"kadin","avatarGallery":{"bucket":"tto-ui-assets","prefix":"ui/avatars/kadin/","provider":"supabase-storage","openOnDoubleTap":true}},{"kind":"input","type":"input","x":13,"y":45,"width":74,"height":6.9,"text":"Kullanıcı adı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"username","placeholder":"Kullanıcı adı","required":true},{"kind":"input","type":"input","x":13,"y":53,"width":74,"height":6.9,"text":"E-posta adresi","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"email","placeholder":"E-posta adresi","required":true},{"kind":"input","type":"input","x":13,"y":61,"width":74,"height":6.9,"text":"Şifre","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"password","placeholder":"Şifre","secure":true,"required":true},{"kind":"input","type":"input","x":13,"y":69,"width":74,"height":6.9,"text":"Şifre Tekrar","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"passwordConfirm","placeholder":"Şifre Tekrar","secure":true,"required":true},{"kind":"button","type":"button","x":13,"y":78,"width":74,"height":7.1,"text":"KAYIT OL","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.5,"opacity":1,"radius":13,"variant":"solid","enabled":true,"action":"auth-register-preview","motion":"shine"},{"kind":"button","type":"button","x":13,"y":86,"width":74,"height":7.1,"text":"ZATEN BİR HESABIM VAR","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.5,"opacity":1,"radius":13,"variant":"outline","enabled":true,"action":"page","target":"page_mw16k3u1_4y820qym","motion":"shine"},{"kind":"background","type":"background","x":0,"y":0,"width":100,"height":100,"text":"Sayfa Arka Planı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":0,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/giris-kay-t-ec0c858f.png","assetPath":"ui/giris-kay-t-ec0c858f.png","backgroundFit":"cover","backgroundPosition":"center","backgroundShade":0.18,"visible":true}],"transition":{"ease":"ease-in-out","exit":"push-right","enter":"push-left","overlap":true,"duration":2000}}},{"page_key":"page_mw16k3u1_4y820qym","draft_key":"draft_mw16lbna_5w9vo1yf","page_name":"Giriş","published_at":"2026-11-04 15:26:43.714+00","scene_data":{"name":"Giriş","schema":"tto_ui_scene_v1","sceneFx":"gateway","sceneSkin":"royal","background":"radial-gradient(circle at 50% 50%,rgba(255,215,150,.08),transparent 35%),linear-gradient(135deg,#0b1625 0%,#102235 48%,#08101b 100%)","components":[{"kind":"panel","type":"panel","x":7,"y":12,"width":86,"height":80,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.45,"radius":30,"variant":"soft","enabled":true,"motion":"breathe"},{"kind":"decor","type":"decor","x":12,"y":13,"width":76,"height":1,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.6,"radius":22,"variant":"neon","enabled":true},{"kind":"text","type":"text","x":20,"y":16.2,"width":60,"height":5.5,"text":"HESABINA GİRİŞ YAP","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":20,"opacity":1,"radius":12,"variant":"glass","enabled":true,"fontWeight":"950","textAlign":"center"},{"kind":"text","type":"text","x":22,"y":22.5,"width":56,"height":3.6,"text":"Ekonomi dünyasına yeniden hoş geldin","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":9.5,"opacity":1,"radius":12,"variant":"glass","enabled":true,"textAlign":"center"},{"kind":"decor","type":"decor","x":12,"y":27.5,"width":76,"height":0.35,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":0.55,"radius":99,"variant":"neon","enabled":true,"motion":"shine"},{"kind":"input","type":"input","x":13,"y":30,"width":74,"height":6.9,"text":"E-posta adresi","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"email","placeholder":"E-posta adresi","required":true},{"kind":"input","type":"input","x":13,"y":38,"width":74,"height":6.9,"text":"Şifre","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12.5,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"password","placeholder":"Şifre","required":true,"secure":true},{"kind":"toggle","type":"toggle","x":14,"y":46,"width":30,"height":5,"text":"Beni Hatırla","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.6,"opacity":1,"radius":12,"variant":"soft","enabled":true,"fieldRole":"rememberMe","checked":false},{"kind":"button","type":"button","x":13,"y":55,"width":74,"height":7.1,"text":"GİRİŞ YAP","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.5,"opacity":1,"radius":13,"variant":"solid","enabled":true,"action":"auth-login-preview","motion":"shine"},{"kind":"button","type":"button","x":13,"y":64,"width":74,"height":7.1,"text":"KAYIT OL","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":11.5,"opacity":1,"radius":13,"variant":"outline","enabled":true,"action":"page","target":"page_mw16k3u1_a5a5hk4m","motion":"shine"},{"kind":"background","type":"background","x":0,"y":0,"width":100,"height":100,"text":"Sayfa Arka Planı","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":12,"opacity":1,"radius":0,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/giris-kay-t-ec0c858f.png","assetPath":"ui/giris-kay-t-ec0c858f.png","backgroundFit":"cover","backgroundPosition":"center","backgroundShade":0.18,"visible":true},{"kind":"social","type":"social","x":13,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/instagram-44d23ce3.png","assetPath":"ui/instagram-44d23ce3.png","socialPlatform":"instagram","action":"link","target":""},{"kind":"social","type":"social","x":28,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/x-twitter-2f7e17a7.png","assetPath":"ui/x-twitter-2f7e17a7.png","socialPlatform":"x","action":"link","target":""},{"kind":"social","type":"social","x":43,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/facebook-a491c0e1.png","assetPath":"ui/facebook-a491c0e1.png","socialPlatform":"facebook","action":"link","target":""},{"kind":"social","type":"social","x":58,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/telegram-f41cae6b.png","assetPath":"ui/telegram-f41cae6b.png","socialPlatform":"telegram","action":"link","target":""},{"kind":"social","type":"social","x":73,"y":77,"width":12,"height":7,"text":"","premium":true,"skin":"royal","color":"#f9e6c4","fontSize":8,"opacity":1,"radius":13,"variant":"glass","enabled":true,"src":"https://fybnrasxalmbxjtynnpk.supabase.co/storage/v1/object/public/tto-ui-assets/ui/youtube-ae191aec.png","assetPath":"ui/youtube-ae191aec.png","socialPlatform":"youtube","action":"link","target":""}],"transition":{"ease":"ease-in-out","exit":"push-right","enter":"push-left","overlap":true,"duration":2000}}}]}</script>
+<script>
+'use strict';
+(()=>{
+/* TTO shared player engine contract v1.7 — identical in Yönetici/Oyuncu. */
+const TTO_ENGINE_VERSION='2.3.0';
+const TTO_SUPPORTED_KINDS=new Set(['background','panel','card','decor','text','label','heading','button','input','select','date','slider','toggle','checkbox','radio','progress','ring','stat','avatar','image','social']);
+const TTO_SUPPORTED_ACTIONS=new Set(['none','message','page','toggle','counter','link','social-link','auth-login-preview','auth-register-preview']);
+const TTO_SUPPORTED_CAPABILITIES=new Set(['scene.render.v1','scene.navigation.v1','scene.transitions.v1','ui.basic.v1','ui.forms.v1','auth.email.v1','avatar.gallery.v1','assets.offline.v1','scene.update.v1','scene.background.pan.v1','scene.update.live.v1','profile.avatar.button.v1']);
+// A game mechanic is not supported simply because its visual controls can be rendered.
+const TTO_SUPPORTED_GAME_MECHANICS=new Set([]);
+const TTO_ANDROID_PERMISSIONS=new Set([]);
+const TTO_NATIVE_FEATURES=new Set([]);
+const TTO_CONTRACT_VERSION='tto_engine_contract_v1';
+const ttoToList=value=>Array.isArray(value)?value.map(x=>String(x).trim()).filter(Boolean):typeof value==='string'?value.split(/[,;\n]/).map(x=>x.trim()).filter(Boolean):[];
+const ttoSemver=v=>/^\d+\.\d+\.\d+$/.test(String(v||''))?String(v).split('.').map(Number):null;
+function ttoAuditSceneBundle(input){
+ const bundled=Array.isArray(input?.scenes)||Array.isArray(input);
+ const rows=Array.isArray(input?.scenes)?input.scenes:Array.isArray(input)?input:[input];
+ const blocking=[],warnings=[],byType={engine:[],native:[],content:[]};
+ const add=(type,why)=>{blocking.push(why);byType[type].push(why)};
+ const seenKeys=new Set();
+ const knownKeys=new Set(rows.filter(Boolean).map(x=>String(x.page_key||'')).filter(Boolean));
+ const listFields=['requiredCapabilities'];
+ const checkRules=(obj,where)=>{
+  if(!obj||typeof obj!=='object')return;
+  for(const k of listFields)for(const val of ttoToList(obj[k]))if(!TTO_SUPPORTED_CAPABILITIES.has(val))add('engine',where+' — oyuncu motorunda olmayan yetenek: '+val);
+  for(const val of ttoToList(obj.requiredGameMechanics))if(!TTO_SUPPORTED_GAME_MECHANICS.has(val))add('engine',where+' — yeni oyun mekaniği: '+val);
+  for(const k of ['requiredAndroidPermissions','androidPermissions','nativePermissions'])for(const val of ttoToList(obj[k]))if(!TTO_ANDROID_PERMISSIONS.has(val.toLowerCase()))add('native',where+' — yeni Android izni: '+val);
+  for(const k of ['requiredNativeFeatures','nativeFeatures','requiredNativeCapabilities'])for(const val of ttoToList(obj[k]))if(!TTO_NATIVE_FEATURES.has(val.toLowerCase()))add('native',where+' — yeni yerel cihaz özelliği: '+val);
+ };
+ if(!rows.length||rows.length>150)add('content','Sahne paketi boş veya sınırın üzerinde');
+ for(const row of rows){
+  const scene=row?.scene_data||row||{};
+  const name=String(row?.page_name||scene.name||'Sahne').slice(0,100);
+  const id=String(row?.page_key||'');
+  if(id){if(seenKeys.has(id))add('content',name+' — yinelenen sayfa kimliği');seenKeys.add(id)}
+  if(scene.schema&&scene.schema!=='tto_ui_scene_v1')add('engine',name+' — desteklenmeyen sahne şeması: '+scene.schema);
+  if(!Array.isArray(scene.components)){add('content',name+' — eleman listesi eksik');continue}
+  if(scene.components.length>500)add('content',name+' — sahnede çok fazla eleman var');
+  checkRules(row,name);checkRules(scene,name);
+  const min=String(scene.minPlayerEngine||scene.minEngineVersion||row?.minPlayerEngine||'').trim();
+  if(min){const parts=ttoSemver(min),installed=ttoSemver(TTO_ENGINE_VERSION);if(!parts)add('content',name+' — motor sürümü X.Y.Z biçiminde olmalı');else if(parts.some((v,i)=>v>installed[i]&&parts.slice(0,i).every((p,j)=>p===installed[j])))add('engine',name+' — en az '+min+' motor gerekiyor; mevcut '+TTO_ENGINE_VERSION)}
+  const seenElements=new Set();
+  for(const c of scene.components){
+   if(!c||typeof c!=='object'){add('content',name+' — geçersiz UI elemanı');continue}
+   const kind=String(c.kind||c.type||'').toLowerCase(),action=String(c.action||'none').trim();
+   const label=String(c.text||c.id||kind).slice(0,34);
+   if(kind==='background'&&c.backgroundScroll==='horizontal'){
+    if(!String(c.src||'').trim())add('content',name+' — panorama görseli bulunmuyor');
+    const w=Number(c.backgroundWidthPercent??200),p=Number(c.backgroundStartPercent??50),speed=Number(c.backgroundScrollSensitivity??1);
+    if(!Number.isFinite(w)||w<200||w>600||!Number.isFinite(p)||p<0||p>100||!Number.isFinite(speed)||speed<.25||speed>3) add('content',name+' — panorama genişliği, başlangıç konumu veya hassasiyeti geçersiz');
+   }
+   if(c.imageSource==='playerAvatar'&&kind!=='button')add('content',name+' — oyuncu avatarı yalnızca butona bağlanabilir');
+   if(c.imageSource&&!['playerAvatar'].includes(c.imageSource))add('engine',name+' — bilinmeyen görsel kaynağı: '+c.imageSource);
+   if(!TTO_SUPPORTED_KINDS.has(kind))add('engine',name+' — desteklenmeyen UI elemanı: '+(kind||'(tür yok)')+' ('+label+')');
+   if(!TTO_SUPPORTED_ACTIONS.has(action))add('engine',name+' — desteklenmeyen eylem: '+action+' ('+label+')');
+   if(c.id){if(seenElements.has(c.id))warnings.push(name+' — aynı kimlikle birden fazla UI elemanı: '+c.id);seenElements.add(c.id)}
+   checkRules(c,name+' / '+label);
+   if(action==='page'&&!c.target)warnings.push(name+' — '+label+' için hedef sayfa seçilmemiş');
+   if(action==='page'&&c.target&&bundled&&knownKeys.size>1&&!knownKeys.has(String(c.target)))add('content',name+' — '+label+' hedef sayfası yayınlanmış pakette bulunmuyor');
+   if(['toggle','counter'].includes(action)&&!c.target)warnings.push(name+' — '+label+' için hedef eleman seçilmemiş');
+   if(['toggle','counter'].includes(action)&&c.target&&!scene.components.some(x=>x?.id===c.target))add('content',name+' — '+label+' için hedef eleman bulunamadı');
+   if(action==='message'&&/banka|borsa|mağaza|fabrika|satın|ödeme|üretim|transfer|ticaret|kredi|yatırım/i.test(name))warnings.push(name+' — '+label+' yalnızca bildirim gösteriyor; oyun işlemi henüz tanımlı değil');
+  }
+ }
+ const unique=a=>[...new Set(a)];
+ return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
+}
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.3.0'});
+const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
+const DESIGN_W=390,DESIGN_H=844;
+function updateStageFit(){
+ // Fill the real device viewport: the 390×844 mockup must never letterbox the scene.
+ // Individual shape-preserving components (rings, avatars, social icons) are sized separately.
+ const viewport=$('designViewport');if(!viewport)return;
+ viewport.style.setProperty('--tto-uniform-scale','1');
+}
+
+const MAIN=['Karşılama','Yükleme','Giriş','Kayıt','Anasayfa'];const BOOTSTRAP=JSON.parse($('builtInScenes').textContent);
+const KEY='tto_player_scene_cache_v1',IDB='tto_player_offline_v1';let db=null,bundle=null,current='',moving=false,autoTimer=0,noticeTimer=0,updateRunning=false;
+let lastCompatibilityReport={ok:true,requiresApk:false,blocking:[],warnings:[]};const uiValues=new Map();let avatarPick={gender:'',url:''};let avatars={erkek:[],kadin:[]};const inputValues={username:'',email:'',password:'',passwordConfirm:'',rememberMe:false};
+
+const SESSION_KEY=KEY+'_auth';
+const auth={session:null,user:null,active:false,working:false};let avatarGalleryMode='registration',profileAvatarSaving=false;
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function verifiedProfileAvatarUrl(src){
+ if(!src||!allowAssetUrl(src))return '';
+ try{
+  const u=new URL(src);
+  const path=u.pathname;
+  return /^\/storage\/v1\/object\/public\/tto-ui-assets\/ui\/avatars\/(?:erkek|kadin)\/[^/]+\.(?:png|jpe?g|webp)$/i.test(path)?u.href:'';
+ }catch(_){return ''}
+}
+function activePlayerAvatarUrl(){
+ // An unverified device-wide avatarPick must never leak across accounts.
+ return auth.active?verifiedProfileAvatarUrl(auth.user?.user_metadata?.avatar_url||''):'';
+}
+function refreshProfileAvatarButtons(){
+ const url=activePlayerAvatarUrl();
+ for(const box of $('scene').querySelectorAll('.layer[data-avatar-binding="playerAvatar"]')){
+  box.replaceChildren();
+  if(url)appendImage(box,url,'contain');
+  else{const mark=document.createElement('span');mark.className='player-avatar-blank';mark.setAttribute('aria-hidden','true');box.append(mark);}
+ }
+}
+// Older accounts may have the avatar in their RLS-protected player record.
+async function hydrateProfileAvatar(){
+ const userId=auth.user?.id,token=auth.session?.access_token;
+ if(!auth.active||!userId||!token||activePlayerAvatarUrl())return;
+ try{
+  const url=CONFIG.url+'/rest/v1/tto_players?select=avatar_url,avatar_gender&auth_user_id=eq.'+encodeURIComponent(userId)+'&limit=1';
+  const res=await fetch(url,{headers:{apikey:CONFIG.key,Authorization:'Bearer '+token,Accept:'application/json'},cache:'no-store'});
+  if(!res.ok||!auth.active||auth.user?.id!==userId)return;
+  const rows=await res.json();const avatar=verifiedProfileAvatarUrl(rows?.[0]?.avatar_url);
+  if(!avatar||!auth.active||auth.user?.id!==userId)return;
+  auth.user={...auth.user,user_metadata:{...(auth.user.user_metadata||{}),avatar_url:avatar,avatar_gender:rows[0].avatar_gender||''}};
+  if(auth.session)auth.session.user=auth.user;
+  const storage=fromStore(localStorage,SESSION_KEY)?localStorage:sessionStorage;
+  try{if(auth.session)storage.setItem(SESSION_KEY,JSON.stringify(auth.session))}catch(_){}
+  refreshProfileAvatarButtons();
+ }catch(err){console.warn('Profil avatarı getirilemedi',err)}
+}
+
+const validEmail=x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(x||''));
+const fromStore=(store,key)=>{try{return JSON.parse(store.getItem(key)||'null')}catch(_){return null}};
+function forgetSession(){try{localStorage.removeItem(SESSION_KEY)}catch(_){}try{sessionStorage.removeItem(SESSION_KEY)}catch(_){}auth.session=null;auth.user=null;auth.active=false}
+function persistSession(v,remember){const stored={access_token:v.access_token,refresh_token:v.refresh_token,expires_at:Math.floor(Date.now()/1000)+Number(v.expires_in||3600),user:v.user||auth.user};if(!stored.access_token||!stored.refresh_token)return false;auth.session=stored;auth.user=stored.user;auth.active=true;try{localStorage.removeItem(SESSION_KEY);sessionStorage.removeItem(SESSION_KEY);(remember?localStorage:sessionStorage).setItem(SESSION_KEY,JSON.stringify(stored))}catch(_){/* some embedded browsers block storage; session works until close */}return true}
+async function authFetch(endpoint,method='GET',payload=null,token=''){
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),14000);
+ try{
+   const res=await fetch(CONFIG.url+'/auth/v1/'+endpoint,{method,headers:{apikey:CONFIG.key, 'Content-Type':'application/json', ...(token?{Authorization:'Bearer '+token}:{})},body:payload?JSON.stringify(payload):undefined,signal:ctrl.signal,cache:'no-store'});
+   const data=await res.json().catch(()=>({}));if(!res.ok)throw Error(data.msg||data.error_description||data.message||data.error||'Sunucu yanıtı: '+res.status);return data;
+ }finally{clearTimeout(timer)}
+}
+async function restoreSession(){
+ let saved=fromStore(localStorage,SESSION_KEY)||fromStore(sessionStorage,SESSION_KEY);if(!saved?.refresh_token)return false;
+ let keep=!!fromStore(localStorage,SESSION_KEY);
+ try{
+   if(!saved.access_token||!saved.expires_at||saved.expires_at<Date.now()/1000+90){const refresh=await authFetch('token?grant_type=refresh_token','POST',{refresh_token:saved.refresh_token});persistSession(refresh,keep)}else {auth.session=saved;auth.user=saved.user;auth.active=true}
+   const me=await authFetch('user','GET',null,auth.session.access_token);auth.user=me;if(auth.session)auth.session.user=me;void hydrateProfileAvatar();return true;
+ }catch(e){console.warn('TTO oturum doğrulama:',e);forgetSession();return false}
+}
+function authBusy(b){auth.working=b;for(const btn of $('scene').querySelectorAll('.layer[data-kind="button"]')){if(/auth-(?:login|register)-preview/.test(btn.dataset.action||'')){btn.style.pointerEvents=b?'none':'';btn.style.opacity=b?'.64':''}}}
+function getMainScene(){
+ const priorities=['Anasayfa','Ana Sayfa','Ana Menü','Ana Menü Sayfası','Ana Ekran','Home'];
+ for(const name of priorities){const scene=bundle?.scenes?.find(x=>String(x.page_name||'').trim().toLocaleLowerCase('tr-TR')===name.toLocaleLowerCase('tr-TR'));if(scene)return scene;}
+ return bundle?.scenes?.find(x=>String(x.scene_data?.pageRole||x.scene_data?.role||'').toLowerCase()==='home')||null;
+}
+function enterPublishedHome(){
+ const scene=getMainScene();
+ hidePlayerHome();
+ if(scene){if(moving){setTimeout(()=>enterPublishedHome(),80);return true;}goTo(scene.page_name,true);return true;}
+ // No authored home: keep the player in the authored Giriş scene instead of inventing a UI.
+ note('Anasayfa henüz yayınlanmadı.');return false;
+}
+function showPlayerHome(){return enterPublishedHome()}
+
+function hidePlayerHome(){$('playerHome').hidden=true}
+async function doLogin(){
+ if(auth.working)return;
+ if(auth.active&&auth.session?.access_token){enterPublishedHome();return;}
+ const email=inputValues.email.trim(),password=inputValues.password;
+ if(!validEmail(email)||!password){note('Geçerli e-posta adresini ve şifreni gir.');return}
+ authBusy(true);
+ try{
+   const session=await authFetch('token?grant_type=password','POST',{email,password});
+   persistSession(session,!!inputValues.rememberMe);void hydrateProfileAvatar();if(inputValues.rememberMe)writeLocal('rememberEmail',email);else try{localStorage.removeItem(KEY+'_rememberEmail')}catch(_){}
+   inputValues.password='';inputValues.passwordConfirm='';enterPublishedHome();
+ }catch(e){note(/invalid login credentials/i.test(e.message)?'E-posta veya şifre hatalı.':e.message,6500)}finally{authBusy(false)}
+}
+async function doRegister(){
+ if(auth.working)return;const username=inputValues.username.trim(),email=inputValues.email.trim(),password=inputValues.password;
+ if(username.length<3||username.length>30){note('Kullanıcı adı 3–30 karakter olmalı.');return}
+ if(!validEmail(email)){note('Geçerli bir e-posta adresi gir.');return}
+ if(password.length<6){note('Şifre en az 6 karakter olmalı.');return}
+ if(password!==inputValues.passwordConfirm){note('Şifre ve şifre tekrar eşleşmiyor.');return}
+ if(!avatarPick.gender||!allowAssetUrl(avatarPick.url)){note('Önce erkek veya kadın avatarı seç.');return}
+ authBusy(true);
+ try{
+   const payload={email,password,data:{username,avatar_url:avatarPick.url,avatar_gender:avatarPick.gender}};
+   const result=await authFetch('signup','POST',payload);
+   inputValues.password='';inputValues.passwordConfirm='';
+   if(result.access_token&&result.refresh_token){persistSession({...result,user:{...(result.user||{}),user_metadata:{...(result.user?.user_metadata||{}),username,avatar_url:avatarPick.url,avatar_gender:avatarPick.gender}}},!!inputValues.rememberMe);void hydrateProfileAvatar();enterPublishedHome();note('Kayıt başarıyla tamamlandı.')}
+   else{goTo('Giriş');note('Kayıt alındı. E-posta doğrulaması gerekiyorsa gelen kutunu kontrol et.',7000)}
+ }catch(e){note(e.message,6500)}finally{authBusy(false)}
+}
+async function doLogout(){
+ const token=auth.session?.access_token;forgetSession();hidePlayerHome();if(token){try{await authFetch('logout','POST',{},token)}catch(e){console.warn('Çıkış isteği:',e)}}
+ inputValues.password='';inputValues.passwordConfirm='';goTo('Giriş');note('Güvenli çıkış yapıldı.')
+}
+
+const dl={loaded:0,total:0,speed:0,state:'idle',fileCount:0};let imageObjectUrls=new Map(),lastTap={name:'',time:0};
+const TTO_EMBEDDED_BACKGROUND=Object.freeze({});
+const allowAssetUrl=url=>{try{const u=new URL(url);return u.protocol==='https:'&&u.hostname==='fybnrasxalmbxjtynnpk.supabase.co'&&u.pathname.startsWith('/storage/v1/object/')}catch(_){return false}};
+const safeLink=url=>{try{const u=new URL(url);return ['https:','http:'].includes(u.protocol)?u.href:''}catch(_){return ''}};
+const clone=v=>JSON.parse(JSON.stringify(v));
+const visibleText=v=>String(v??'').replace(/supabase\s*toplam/gi,'TOPLAM DOSYA BOYUTU').replace(/supabase/gi,'Oyun');
+const fmtBytes=n=>{n=Number(n);if(!Number.isFinite(n)||n<0)return '—';if(!n)return '0 B';const units=['B','KB','MB','GB'];let i=0;while(n>=1024&&i<units.length-1){n/=1024;i++}return n.toLocaleString('tr-TR',{maximumFractionDigits:i?1:0})+' '+units[i]};
+const note=(msg,time=3500)=>{banner.textContent=visibleText(msg);banner.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>banner.hidden=true,time)};
+const setStatus=(msg,cls='idle')=>{status.className=cls;status.textContent=visibleText(msg)};
+const normTime=t=>{const s=String(t||'').replace(' ','T').replace(/([+-]\d\d)$/,'$1:00');const d=Date.parse(s);return Number.isNaN(d)?s:new Date(d).toISOString()};
+const signature=b=>(b?.scenes||[]).map(x=>String(x.page_key)+'|'+normTime(x.published_at)).sort().join(';');
+function validBundle(b){return b&&Array.isArray(b.scenes)&&b.scenes.length>0&&b.scenes.length<150&&b.scenes.every(x=>x&&typeof x.page_key==='string'&&typeof x.page_name==='string'&&x.scene_data&&Array.isArray(x.scene_data.components)&&x.scene_data.components.length<=500)}
+const readLocal=k=>{try{return JSON.parse(localStorage.getItem(KEY+'_'+k)||'null')}catch(_){return null}};
+const writeLocal=(k,v)=>{try{localStorage.setItem(KEY+'_'+k,JSON.stringify(v));return true}catch(_){return false}};
+function openDB(){return new Promise(resolve=>{if(!('indexedDB'in window))return resolve(null);let settled=false;try{const req=indexedDB.open(IDB,1);req.onupgradeneeded=()=>{const idb=req.result;if(!idb.objectStoreNames.contains('state'))idb.createObjectStore('state');if(!idb.objectStoreNames.contains('assets'))idb.createObjectStore('assets')};req.onsuccess=()=>{settled=true;resolve(req.result)};req.onerror=()=>{settled=true;resolve(null)};req.onblocked=()=>{settled=true;resolve(null)}}catch(_){if(!settled)resolve(null)}})}
+function idbGet(store,key){if(!db)return Promise.resolve(null);return new Promise(resolve=>{try{const r=db.transaction(store,'readonly').objectStore(store).get(key);r.onsuccess=()=>resolve(r.result??null);r.onerror=()=>resolve(null)}catch(_){resolve(null)}})}
+function idbPut(store,key,value){if(!db)return Promise.resolve(false);return new Promise(resolve=>{try{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(value,key);tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)}catch(_){resolve(false)}})}
+function idbDelete(store,key){if(!db)return Promise.resolve(false);return new Promise(resolve=>{try{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false)}catch(_){resolve(false)}})}
+function idbSwapPending(){if(!db)return Promise.resolve(null);return new Promise(resolve=>{try{const tx=db.transaction('state','readwrite'),st=tx.objectStore('state');let pending=null,manifest=null;const m=st.get('pendingGallery');m.onsuccess=()=>{manifest=m.result||null};const req=st.get('pending');req.onsuccess=()=>{pending=req.result||null;if(validBundle(pending)&&ttoAuditSceneBundle(pending).ok){st.put(pending,'active');st.delete('pending');if(validGallery(manifest)){st.put(manifest,'activeGallery');st.delete('pendingGallery')}}};tx.oncomplete=()=>resolve(validBundle(pending)&&ttoAuditSceneBundle(pending).ok?pending:null);tx.onerror=()=>resolve(null)}catch(_){resolve(null)}})}
+function idbStagePending(pack,manifest){if(!db)return Promise.resolve(false);return new Promise(resolve=>{try{const tx=db.transaction('state','readwrite');const st=tx.objectStore('state');st.put(manifest,'pendingGallery');st.put(pack,'pending');tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)}catch(_){resolve(false)}})}
+// Update active scenes and their gallery atomically only after all referenced assets are cached.
+function idbPromoteLive(pack,manifest){
+ if(!db)return Promise.resolve(writeLocal('active',pack)&&writeLocal('gallery',manifest));
+ return new Promise(resolve=>{try{const tx=db.transaction('state','readwrite'),st=tx.objectStore('state');
+   st.put(pack,'active');st.put(manifest,'activeGallery');st.delete('pending');st.delete('pendingGallery');
+   tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)
+ }catch(_){resolve(false)}})
+}
+
+function validGallery(v){return v&&Array.isArray(v.erkek)&&Array.isArray(v.kadin)&&[...v.erkek,...v.kadin].every(a=>a&&allowAssetUrl(a.url))}
+async function initStorage(){db=await openDB();let pending=db?await idbSwapPending():readLocal('pending');if(!db&&validBundle(pending)&&ttoAuditSceneBundle(pending).ok){writeLocal('active',pending);try{localStorage.removeItem(KEY+'_pending')}catch(_){}}bundle=(validBundle(pending)&&ttoAuditSceneBundle(pending).ok?pending:null) || (db?await idbGet('state','active'):readLocal('active')) || clone(BOOTSTRAP);if(!validBundle(bundle)||!ttoAuditSceneBundle(bundle).ok)bundle=clone(BOOTSTRAP);if(!db)writeLocal('active',bundle);const storedGallery=db?await idbGet('state','activeGallery'):readLocal('gallery');if(validGallery(storedGallery))avatars=storedGallery;const choice=readLocal('avatar');if(choice&&['erkek','kadin'].includes(choice.gender)&&allowAssetUrl(choice.url))avatarPick=choice;inputValues.email=String(readLocal('rememberEmail')||'');inputValues.rememberMe=!!inputValues.email}
+const assetMemory=new Map(),thumbnailUrls=new Map();
+async function cachedBlob(url){if(assetMemory.has(url))return assetMemory.get(url);const stored=await idbGet('assets',url);if(stored instanceof Blob&&stored.size>0){assetMemory.set(url,stored);return stored}return null}
+async function resolveAsset(src){if(TTO_EMBEDDED_BACKGROUND[src])return TTO_EMBEDDED_BACKGROUND[src];if(!allowAssetUrl(src))return '';if(imageObjectUrls.has(src))return imageObjectUrls.get(src);const data=await cachedBlob(src);if(data){const url=URL.createObjectURL(data);imageObjectUrls.set(src,url);return url}return src}
+function directAsset(src){return TTO_EMBEDDED_BACKGROUND[src]||thumbnailUrls.get(src)||imageObjectUrls.get(src)||src}
+function assetSources(b,gallery=avatars){const urls=new Set();for(const scene of b.scenes||[])for(const c of scene.scene_data.components||[]){if(allowAssetUrl(c.src))urls.add(c.src)}if(validGallery(gallery)){for(const a of [...gallery.erkek,...gallery.kadin]){if(allowAssetUrl(a.url))urls.add(a.url)}}return [...urls].filter(src=>!TTO_EMBEDDED_BACKGROUND[src])}
+function isAvatarAsset(url){return /\/ui\/avatars\/(?:erkek|kadin)\//.test(new URL(url).pathname)}
+function loadingLabel(text,detail='',isError=false){const gate=$('loadGate');gate.hidden=false;gate.classList.toggle('error',isError);$('loadGateLabel').textContent=visibleText(text);$('loadGateInfo').textContent=visibleText(detail);$('retryLoad').hidden=!isError}
+
+function getScene(name){return bundle?.scenes?.find(x=>x.page_name===name)||null}
+function getByKey(key){return bundle?.scenes?.find(x=>x.page_key===key)||null}
+function homeName(){return getScene('Karşılama')?'Karşılama':getScene('Yükleme')?'Yükleme':getScene('Giriş')?'Giriş':bundle.scenes[0]?.page_name}
+const hasUserReducedMotion=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function metric(k){switch(k){case'downloadPercent':return dl.total?String(Math.round(100*dl.loaded/dl.total))+'%':(dl.state==='done'?'100%':'0%');case'downloadSpeed':return fmtBytes(dl.speed)+'/sn';case'downloadTotal':return fmtBytes(dl.total);case'downloadLoaded':return fmtBytes(dl.loaded);default:return '—'}}
+function patchMetrics(){const stage=$('scene');stage.querySelectorAll('[data-metric]:not([data-metric=""])').forEach(el=>{const k=el.dataset.metric;if(!['downloadPercent','downloadSpeed','downloadTotal','downloadLoaded'].includes(k))return;if(el.dataset.kind==='ring'){const pct=dl.total?Math.min(100,100*dl.loaded/dl.total):(dl.state==='done'?100:0);el.style.setProperty('--ring-pct',pct+'%');(el.querySelector('.ring-value')||el).textContent=Math.round(pct)+'%'}else{const n=el.querySelector('.value');if(n)n.textContent=metric(k);else el.textContent=metric(k)}})}
+function clamp(n,min,max){n=Number(n);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):min}
+function setupPanorama(root,bg){
+ // Reproduce manager v2.46's rendering equation exactly: (width-100)*start/100.
+ const width=clamp(bg.backgroundWidthPercent??200,200,600);
+ const sensitivity=clamp(bg.backgroundScrollSensitivity??1,.25,3);
+ const imagePosition=['center','top','bottom','left','right'].includes(bg.backgroundPosition)?bg.backgroundPosition:'center';
+ const shade=clamp(bg.backgroundShade??.18,0,.85);
+ const controller=new AbortController();root.__panoramaController=controller;
+ const layer=document.createElement('div');layer.className='tto-panorama-bg';layer.setAttribute('aria-hidden','true');
+ layer.style.width=width+'%';layer.style.backgroundSize='100% 100%, cover';layer.style.backgroundPosition='center, '+imagePosition;
+ root.insertBefore(layer,root.firstChild);
+ root.dataset.panorama='true';root.style.touchAction='pan-y';
+ let percent=clamp(bg.backgroundStartPercent??50,0,100),drag=null;
+ const apply=()=>{layer.style.left=(-(width-100)*percent/100)+'%';root.dataset.panPercent=String(percent)};
+ apply();
+ const isControl=target=>!!target?.closest?.('button,input,textarea,select,a,[role="button"],[data-kind="button"],[data-kind="avatar"],[data-kind="social"],[data-kind="input"],[data-kind="toggle"],[data-kind="select"],[data-kind="date"],[data-kind="slider"],[data-kind="checkbox"],[data-kind="radio"]');
+ root.addEventListener('pointerdown',ev=>{
+  if(ev.isPrimary===false||(ev.pointerType==='mouse'&&ev.button!==0)||isControl(ev.target))return;
+  drag={id:ev.pointerId,startX:ev.clientX,start:percent};
+  try{root.setPointerCapture(ev.pointerId)}catch(_){}
+ },{signal:controller.signal});
+ root.addEventListener('pointermove',ev=>{
+  if(!drag||drag.id!==ev.pointerId)return;
+  const travel=root.clientWidth*(width/100-1);
+  if(travel<1)return;
+  percent=clamp(drag.start-(ev.clientX-drag.startX)*100/travel*sensitivity,0,100);
+  apply();
+  ev.preventDefault();
+ },{signal:controller.signal});
+ const stop=ev=>{
+  if(!drag||drag.id!==ev.pointerId)return;drag=null;
+  try{root.releasePointerCapture(ev.pointerId)}catch(_){}
+ };
+ root.addEventListener('pointerup',stop,{signal:controller.signal});root.addEventListener('pointercancel',stop,{signal:controller.signal});
+ return {layer,shade};
+}
+function fillBackground(scene){
+ const bg=scene.scene_data,el=$('scene'),outer=$('sceneBackdrop');
+ el.__panoramaController?.abort();el.__panoramaController=null;
+ el.querySelector(':scope > .tto-panorama-bg')?.remove();el.dataset.panorama='false';el.removeAttribute('data-pan-percent');el.style.touchAction='';
+ const base=typeof bg.background==='string'?bg.background:'#081626';
+ el.style.background=base;el.style.backgroundImage='';
+ if(outer){outer.style.background=base;outer.style.backgroundImage='';}
+ const c=(bg.components||[]).find(x=>(x.kind||x.type)==='background'&&x.visible!==false);
+ if(!c?.src||!allowAssetUrl(c.src))return;
+ const shade=clamp(c.backgroundShade??0,0,.85);
+ // The editor owns image fit; do not override a published 100% 100% or contain setting.
+ const fit=['cover','contain','100% 100%'].includes(c.backgroundFit)?c.backgroundFit:'cover';
+ const pos=['center','top','bottom','left','right'].includes(c.backgroundPosition)?c.backgroundPosition:'center';
+ const panorama=c.backgroundScroll==='horizontal'?setupPanorama(el,c):null;
+ const paint=(u)=>{
+  const shadeLayer=`linear-gradient(rgba(3,10,24,${shade}),rgba(3,10,24,${shade}))`;
+  if(panorama){
+   // The authored image alone moves; scene children remain at fixed coordinates.
+   panorama.layer.style.backgroundImage=shadeLayer+',url("'+u+'")';
+   el.style.backgroundImage='none';
+  }else el.style.backgroundImage=shadeLayer+',url("'+u+'")';
+  if(!panorama)el.style.backgroundSize='100% 100%, '+fit;
+  if(!panorama)el.style.backgroundPosition='center, '+pos;
+  el.style.backgroundRepeat='no-repeat';
+  if(outer){outer.style.backgroundImage=`linear-gradient(rgba(4,12,24,.23),rgba(4,12,24,.23)),url("${u}")`;outer.style.backgroundSize='cover';outer.style.backgroundPosition='center';outer.style.backgroundRepeat='no-repeat'}
+ };
+ paint(directAsset(c.src));
+ resolveAsset(c.src).then(u=>{if(el.dataset.pageKey===scene.page_key&&u)paint(u)})
+}
+
+function appendImage(target,url,fit='contain',onLoaded){const im=document.createElement('img');im.alt='';im.loading='eager';im.decoding='async';im.draggable=false;im.style.objectFit=fit;if(onLoaded)im.addEventListener('load',()=>onLoaded(im),{once:true});target.append(im);if(allowAssetUrl(url)){im.src=directAsset(url);if(!imageObjectUrls.has(url)&&!thumbnailUrls.has(url))resolveAsset(url).then(u=>{if(u&&im.isConnected&&im.src!==u)im.src=u})}return im}
+// TTO v2.4: shared responsive typography. Keep the five-column menu readable on narrow phones.
+function ttoFitLayerText(node, base, scale, kind){
+ if(['avatar','social','ring','decor','progress','image'].includes(kind))return;
+ const raw=Math.max(1,Number(base)||12);
+ const availableWidth=Math.max(1,node.clientWidth-4);
+ const availableHeight=Math.max(1,node.clientHeight-2);
+ const text=(node.textContent||'').trim();
+ const override=Number(node.dataset.phoneFontSize);
+ const target=Math.max(5,((innerWidth<600&&override>0)?override:raw)*scale);
+ node.style.fontSize=target+'px';
+ if(['input','toggle','checkbox','select','date'].includes(kind))return;
+ if(!text)return;
+ node.style.overflowWrap='normal';
+ node.style.wordBreak='normal';
+ node.style.lineHeight='1.12';
+ node.style.whiteSpace='normal';
+ // Search the largest size that actually fits, rather than shrinking in arbitrary half-pixel steps.
+ let lo=4.5,hi=target,best=lo;
+ for(let i=0;i<13;i++){
+  const size=(lo+hi)/2;node.style.fontSize=size+'px';
+  if(node.scrollWidth<=availableWidth+4&&node.scrollHeight<=availableHeight+2){best=size;lo=size}else hi=size;
+ }
+ node.style.fontSize=Math.max(4.5,best).toFixed(2)+'px';
+}
+function fitText(){
+ const wrap=$('scene');if(!wrap)return;
+ const sw=wrap.clientWidth||390, sh=wrap.clientHeight||844;
+ const scale=clamp(Math.min(sw/390,sh/844),.45,2.55);
+ for(const e of wrap.querySelectorAll('.layer'))ttoFitLayerText(e,e.dataset.baseSize,scale,e.dataset.kind);
+}
+
+function fitAvatarFrame(box,img,origin){if(!img.naturalWidth||!img.naturalHeight)return;const stage=$('scene');if(!stage.clientWidth||!stage.clientHeight)return;const ow=origin.width,oh=origin.height;const widthPx=ow/100*stage.clientWidth,heightPx=oh/100*stage.clientHeight;const ratio=img.naturalWidth/img.naturalHeight;let w=heightPx*ratio,h=heightPx;if(w>widthPx){w=widthPx;h=widthPx/ratio}const originalL=Number(origin.x)/100*stage.clientWidth,originalT=Number(origin.y)/100*stage.clientHeight;box.style.width=100*w/stage.clientWidth+'%';box.style.height=100*h/stage.clientHeight+'%';box.style.left=100*(originalL+(widthPx-w)/2)/stage.clientWidth+'%';box.style.top=100*(originalT+(heightPx-h)/2)/stage.clientHeight+'%'}
+function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return null;const e=document.createElement('div');const kind=String(c.kind||c.type||'panel');e.className='layer';e.dataset.kind=kind;e.dataset.baseSize=c.fontSize||12;e.dataset.phoneFontSize=c.phoneFontSize||'';if(c.metricKey)e.dataset.metric=c.metricKey;e.dataset.variant=c.variant||'glass';e.dataset.motion=c.motion||'';e.dataset.fieldRole=c.fieldRole||'';e.dataset.action=c.action||'';
+ e.style.left=clamp(c.x,0,100)+'%';e.style.top=clamp(c.y,0,100)+'%';e.style.width=clamp(c.width,1,100)+'%';e.style.height=clamp(c.height,0.2,100)+'%';e.style.borderRadius=clamp(c.radius??10,0,999)+'px';e.style.color=c.color||'#f9e6c4';e.style.opacity=c.opacity??1;e.style.fontWeight=c.fontWeight||'';e.style.textAlign=c.textAlign||'center';e.style.fontSize=Math.max(7,(Number(c.fontSize)||12)*clamp(Math.min($('scene').clientWidth/390,$('scene').clientHeight/844),.45,2.55))+'px';
+ if(kind==='panel'||kind==='card'){if(c.text)e.textContent=visibleText(c.text);return e}if(kind==='decor')return e;
+ if(['text','label','heading'].includes(kind)){if(c.metricKey){e.classList.add('metric');if(c.compactMetric){const lbl=document.createElement('span');lbl.className='label';lbl.textContent=visibleText(c.metricLabel||'');const val=document.createElement('strong');val.className='value';val.textContent=metric(c.metricKey);e.append(lbl,val)}else e.textContent=metric(c.metricKey)}else e.textContent=visibleText(c.text||'');return e}
+ if(kind==='ring'){
+  // Compute the actual square in CSS pixels, never use the design mockup's aspect ratio.
+  const stage=$('scene'),sw=stage.clientWidth||DESIGN_W,sh=stage.clientHeight||DESIGN_H;
+  const boxW=clamp(c.width,1,100)/100*sw,boxH=clamp(c.height,.2,100)/100*sh;
+  const diameter=Math.max(1,Math.min(boxW,boxH));
+  e.style.left=(clamp(c.x,0,100)*sw/100+(boxW-diameter)/2)+'px';
+  e.style.top=(clamp(c.y,0,100)*sh/100+(boxH-diameter)/2)+'px';
+  e.style.width=diameter+'px';e.style.height=diameter+'px';
+  e.style.fontSize=Math.max(13,Math.min(28,diameter*.13))+'px';
+  const pct=dl.total?clamp(dl.loaded/dl.total*100,0,100):(dl.state==='done'?100:0);
+  e.style.setProperty('--ring-pct',pct+'%');const label=document.createElement('span');label.className='ring-value';label.textContent=Math.round(pct)+'%';e.append(label);return e
+ }
+ if(kind==='progress'){const rail=document.createElement('div');rail.className='meter-rail';const fill=document.createElement('div');fill.className='meter-fill';fill.style.width=dl.total?clamp(dl.loaded/dl.total*100,0,100)+'%':'0%';rail.append(fill);e.append(rail);return e}
+
+ if(kind==='select'){const el=document.createElement('select');el.className='scene-input';const choices=Array.isArray(c.options)?c.options:String(c.options||'Seçenek 1,Seçenek 2').split(',');for(const option of choices){const val=String(option).trim();if(!val)continue;const opt=document.createElement('option');opt.value=val;opt.textContent=visibleText(val);el.append(opt)}el.value=uiValues.get(c.id)||c.selectedOption||el.options[0]?.value||'';el.onchange=()=>uiValues.set(c.id,el.value);e.append(el);return e}
+ if(kind==='date'){const el=document.createElement('input');el.type='date';el.className='scene-input';el.value=uiValues.get(c.id)||c.valueText||'';el.onchange=()=>uiValues.set(c.id,el.value);e.append(el);return e}
+ if(kind==='slider'){const el=document.createElement('input');el.type='range';el.min=Number(c.min??0);el.max=Number(c.max??100);el.value=Number(uiValues.get(c.id)??c.value??50);el.style.width='83%';const v=document.createElement('small');v.textContent=el.value;v.style.paddingLeft='5px';el.oninput=()=>{uiValues.set(c.id,Number(el.value));v.textContent=el.value};e.append(el,v);return e}
+ if(kind==='radio'){const el=document.createElement('input');el.type='radio';el.name='tto-'+String(c.name||c.id||'choice');el.checked=!!(uiValues.get(c.id)??c.checked);el.onchange=()=>uiValues.set(c.id,el.checked);const v=document.createElement('span');v.textContent=visibleText(c.text);e.append(el,v);return e}
+ if(kind==='stat'){const val=uiValues.get(c.id)??c.value??0;e.textContent=visibleText(c.text||'Değer')+' · '+Number(val).toLocaleString('tr-TR');return e}
+ if(kind==='input'){const input=document.createElement('input');input.className='scene-input';input.autocomplete=c.fieldRole==='password'?'current-password':c.fieldRole==='email'?'email':'off';input.type=c.secure?'password':c.fieldRole==='email'?'email':'text';input.placeholder=visibleText(c.placeholder||c.text||'');input.setAttribute('aria-label',visibleText(c.text||c.fieldRole||'Giriş'));input.value=c.fieldRole&&c.fieldRole!=='password'?inputValues[c.fieldRole]||'':'';if(c.fieldRole==='password'||c.fieldRole==='passwordConfirm')input.value=inputValues[c.fieldRole]||'';input.oninput=()=>{if(c.fieldRole)inputValues[c.fieldRole]=input.value};e.append(input);if(c.secure){input.style.paddingRight='39px';const eye=document.createElement('button');eye.type='button';eye.className='eye';eye.textContent='◉';eye.title='Şifreyi göster';eye.setAttribute('aria-label','Şifreyi göster');eye.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';eye.textContent=show?'⊘':'◉';eye.title=show?'Şifreyi gizle':'Şifreyi göster';eye.setAttribute('aria-label',eye.title)};e.append(eye)}return e}
+ if(kind==='toggle'||kind==='checkbox'){const input=document.createElement('input');input.type='checkbox';input.checked=c.fieldRole==='rememberMe'?inputValues.rememberMe:!!c.checked;input.onchange=()=>{if(c.fieldRole==='rememberMe'){inputValues.rememberMe=input.checked;if(!input.checked){try{localStorage.removeItem(KEY+'_rememberEmail')}catch(_){} }} };const label=document.createElement('span');label.textContent=visibleText(c.text||'');e.append(input,label);return e}
+ if(kind==='avatar'){e.setAttribute('role','button');e.tabIndex=0;const gender=c.avatarGender==='kadin'?'kadin':'erkek';e.setAttribute('aria-label',gender==='erkek'?'Erkek avatar galerisi':'Kadın avatar galerisi');e.dataset.gender=gender;const photo=avatarPick.gender===gender&&avatarPick.url?avatarPick.url:c.src;const im=appendImage(e,photo,'fill',img=>fitAvatarFrame(e,img,c));if(avatarPick.gender===gender)e.classList.add('selected');if(im.complete&&im.naturalWidth)fitAvatarFrame(e,im,c);e.onclick=()=>{avatarPick={gender,url:photo||''};writeLocal('avatar',avatarPick);$('scene').querySelectorAll('.layer[data-kind="avatar"]').forEach(x=>x.classList.toggle('selected',x.dataset.gender===gender));const now=Date.now();if(lastTap.name===gender&&now-lastTap.time<400){openAvatar(gender);lastTap.time=0}else lastTap={name:gender,time:now}};e.ondblclick=ev=>{ev.preventDefault();lastTap.time=0;openAvatar(gender)};e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openAvatar(gender)}};return e}
+ if(kind==='social'){
+  // Square social-image buttons should not stretch when the phone aspect ratio changes.
+  const stage=$('scene'),sw=stage.clientWidth||DESIGN_W,sh=stage.clientHeight||DESIGN_H;
+  const pw=clamp(c.width,1,100)*sw/100,ph=clamp(c.height,.2,100)*sh/100;
+  const side=Math.min(pw,ph);
+  e.style.left=(clamp(c.x,0,100)*sw/100+(pw-side)/2)+'px';
+  e.style.top=(clamp(c.y,0,100)*sh/100+(ph-side)/2)+'px';
+  e.style.width=side+'px';e.style.height=side+'px';
+  e.setAttribute('role','button');e.tabIndex=0;e.setAttribute('aria-label',(c.socialPlatform||'Sosyal')+' bağlantısı');appendImage(e,c.src,'contain');e.onclick=()=>{const url=safeLink(c.target);if(url)window.open(url,'_blank','noopener,noreferrer');else note('Bu sosyal medya butonuna henüz bağlantı atanmamış.')};e.onkeydown=ev=>{if(ev.key==='Enter')e.click()};return e}
+ if(kind==='image'){appendImage(e,c.src,'cover');return e}
+ if(kind==='button'){e.setAttribute('role','button');e.tabIndex=0;if(c.imageSource==='playerAvatar'){e.dataset.avatarBinding='playerAvatar';e.classList.add('player-avatar-button');e.setAttribute('aria-label','Oyuncu profil avatarı');const imageUrl=activePlayerAvatarUrl();if(imageUrl)appendImage(e,imageUrl,'contain');else{const placeholder=document.createElement('span');placeholder.className='player-avatar-blank';placeholder.setAttribute('aria-hidden','true');e.append(placeholder)}}else e.textContent=visibleText(c.text||'');e.onclick=()=>{if(c.imageSource==='playerAvatar'&&(!c.action||c.action==='none'))return openProfileAvatarSelector();return handleButton(c,scene)};e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();e.click()}};return e}
+ e.textContent=visibleText(c.text||'');return e}
+function renderScene(row){if(!row)return;updateStageFit();const scene=$('scene'),layers=$('layers');scene.dataset.pageKey=row.page_key;scene.dataset.fx=row.scene_data.sceneFx||'';fillBackground(row);layers.replaceChildren();for(const c of row.scene_data.components||[]){const el=elem(c,row);if(el)layers.append(el)}requestAnimationFrame(fitText);$('nextButton').hidden=true}
+function fxClasses(info){const s=String(info||'');if(s.includes('left'))return ['out-left','in-left'];if(s.includes('right'))return ['out-right','in-right'];if(/zoom|scale|grow|shrink/.test(s))return ['out-zoom','in-zoom'];return ['out-fade','in-fade']}
+function renderMenu(){const target=$('sceneButtons');target.replaceChildren();const pages=bundle.scenes.slice().sort((a,b)=>{const ai=MAIN.indexOf(a.page_name),bi=MAIN.indexOf(b.page_name);return (ai<0?100:ai)-(bi<0?100:bi)});for(const row of pages){const btn=document.createElement('button');btn.className='pickPage'+(current===row.page_name?' active':'');const strong=document.createElement('strong');strong.textContent=visibleText(row.page_name);const small=document.createElement('small');small.textContent='Yayınlanmış sahne';btn.append(strong,small);btn.onclick=()=>{closeMenu();goTo(row.page_name,true)};target.append(btn)}}
+function goTo(name,effect=true){const row=getScene(name);if(!row||moving)return;clearTimeout(autoTimer);autoTimer=0;const old=current;current=row.page_name;const prev=$('scene'),parent=prev.parentElement;const nxt=prev.cloneNode(false);nxt.id='scene';nxt.className='';nxt.replaceChildren();const lay=document.createElement('div');lay.id='layers';nxt.append(lay);prev.id='';prev.classList.add('old-scene','snapshot-out');parent.insertBefore(nxt,prev);renderScene(row);if(old&&effect&&!hasUserReducedMotion()){const from=getScene(old);const classes=fxClasses(from?.scene_data?.transition?.exit);const entry=fxClasses(row.scene_data?.transition?.enter);const duration=clamp(row.scene_data?.transition?.duration||450,180,1800);nxt.style.setProperty('--duration',duration+'ms');prev.style.setProperty('--duration',duration+'ms');nxt.classList.add('enter-fx',entry[1]);prev.classList.add(classes[0]);moving=true;setTimeout(()=>{prev.remove();nxt.classList.remove('enter-fx',entry[1]);moving=false},duration+50)}else prev.remove();}
+function nextScene(){if(current==='Karşılama')goTo(getScene('Yükleme')?'Yükleme':'Giriş');else if(current==='Yükleme')goTo(getScene('Giriş')?'Giriş':bundle.scenes.find(x=>!['Karşılama','Yükleme'].includes(x.page_name))?.page_name);}
+function handleButton(c,scene){if(c.action==='page'){const target=getByKey(c.target);if(target)return goTo(target.page_name);const fallback=String(c.text||'').toLocaleLowerCase('tr-TR').includes('kayıt')?'Kayıt':'Giriş';if(getScene(fallback))return goTo(fallback);return note('Hedef sayfa henüz yayınlanmadı')}
+ if(c.action==='auth-login-preview'){void doLogin();return}
+ if(c.action==='auth-register-preview'){void doRegister();return}
+ if(c.action==='link'||c.action==='social-link'){const url=safeLink(c.target);if(url)window.open(url,'_blank','noopener,noreferrer');else note('Bağlantı henüz ayarlanmadı.');return}
+ if(c.action==='message'){note(c.message||c.text||'Butona dokunuldu.');return}
+ if(c.action==='toggle'){const obj=scene?.scene_data?.components?.find(x=>x.id===c.target);if(obj){obj.visible=obj.visible===false;renderScene(scene);return}return note('Hedef eleman bulunamadı.')}
+ if(c.action==='counter'){const obj=scene?.scene_data?.components?.find(x=>x.id===c.target);if(obj){uiValues.set(obj.id,Number(uiValues.get(obj.id)??obj.value??0)+1);renderScene(scene);return}return note('Hedef sayaç bulunamadı.')}
+ note('Bu oyun işlemi henüz desteklenmiyor; uygulama güncellemesi gerekebilir.')}
+function closeMenu(){$('sceneMenu').hidden=true}function openMenu(){renderMenu();$('sceneMenu').hidden=false}function closeAvatar(){$('avatarModal').hidden=true}
+async function listAvatars(g){
+ const path='ui/avatars/'+g+'/',out=[];
+ for(let offset=0;offset<1000;offset+=100){
+   const res=await fetch(CONFIG.url+'/storage/v1/object/list/tto-ui-assets',{method:'POST',headers:{apikey:CONFIG.key,'Content-Type':'application/json'},body:JSON.stringify({prefix:path,limit:100,offset,sortBy:{column:'name',order:'asc'}}),cache:'no-store'});
+   if(!res.ok)throw Error('Avatar galerisi okunamadı ('+res.status+').');
+   const page=await res.json();if(!Array.isArray(page))throw Error('Avatar listesi geçerli değil.');
+   for(const item of page){if(!item.name||!/\.(png|jpe?g|webp|gif)$/i.test(item.name))continue;
+     const url=CONFIG.url+'/storage/v1/object/public/tto-ui-assets/'+path+encodeURIComponent(item.name);
+     if(allowAssetUrl(url))out.push({url,path:path+item.name,size:Number(item.metadata?.size||0)});
+   }
+   if(page.length<100)break;
+ }
+ return out;
+}
+async function fetchGallerySnapshot({allowOffline=true}={}){
+ try{
+   const [erkek,kadin]=await Promise.all([listAvatars('erkek'),listAvatars('kadin')]);
+   if(!erkek.length||!kadin.length)throw Error('Erkek veya kadın galerisinde avatar bulunmuyor.');
+   return {erkek,kadin};
+ }catch(err){
+   if(allowOffline&&validGallery(avatars)&&avatars.erkek.length&&avatars.kadin.length){console.warn('TTO avatar listesi: kayıtlı liste kullanılacak',err);return avatars}
+   throw err;
+ }
+}
+function syncAvatarChoice(){if(!avatarPick.url)return;const exists=(avatars[avatarPick.gender]||[]).some(a=>a.url===avatarPick.url);if(!exists){avatarPick={gender:'',url:''};writeLocal('avatar',avatarPick)}}
+function openProfileAvatarSelector(){
+ if(!auth.active||!auth.session?.access_token){note('Avatarını kaydetmek için giriş yapmalısın.');return}
+ const gender=auth.user?.user_metadata?.avatar_gender==='kadin'?'kadin':'erkek';
+ openAvatar(gender,'profile');
+}
+async function persistPlayerAvatarChoice(g,url){
+ const checked=verifiedProfileAvatarUrl(url);
+ if(!auth.active||!auth.session?.access_token||!auth.user?.id)throw Error('Avatarı kaydetmek için giriş yapmalısın.');
+ if(!checked||(avatars[g]||[]).every(a=>a.url!==checked))throw Error('Lütfen galeriden geçerli bir avatar seç.');
+ const owner=auth.user.id,token=auth.session.access_token;
+ // Write the avatar to the signed-in user's server-side Auth metadata, not a device-wide selection.
+ const result=await authFetch('user','PUT',{data:{avatar_url:checked,avatar_gender:g}},token);
+ if(!auth.active||auth.user?.id!==owner)throw Error('Hesap değiştiği için avatar seçimi uygulanmadı.');
+ const returned=result?.user||result;
+ const storedUrl=verifiedProfileAvatarUrl(returned?.user_metadata?.avatar_url||checked);
+ if(!storedUrl)throw Error('Avatar bilgisi kaydedilemedi.');
+ auth.user={...auth.user,...returned,user_metadata:{...(auth.user.user_metadata||{}),...(returned.user_metadata||{}),avatar_url:storedUrl,avatar_gender:g}};
+ if(auth.session)auth.session.user=auth.user;
+ try{const storage=localStorage.getItem(SESSION_KEY)?localStorage:sessionStorage;if(auth.session)storage.setItem(SESSION_KEY,JSON.stringify(auth.session))}catch(_){}
+ refreshProfileAvatarButtons();
+ return storedUrl;
+}
+function openAvatar(g,mode='registration'){
+ if(!['erkek','kadin'].includes(g))return;
+ if(mode!=='profile'&&!$('avatarModal').hidden)return;
+ if(mode==='profile'&&!auth.active){note('Avatarını kaydetmek için giriş yap.');return}
+ const imgs=avatars[g]||[];
+ if(!imgs.length){note('Avatar galerisi hazır değil. Oyunu yeniden başlatıp dosyaları yükle.',5500);return}
+ avatarGalleryMode=mode;
+ const profile=mode==='profile';
+ $('avatarProfileTabs').hidden=!profile;
+ $('avatarProfileMale').classList.toggle('active',profile&&g==='erkek');
+ $('avatarProfileFemale').classList.toggle('active',profile&&g==='kadin');
+ $('avatarTitle').textContent=profile?'PROFİL AVATARINI SEÇ':(g==='erkek'?'ERKEK AVATARLARI':'KADIN AVATARLARI');
+ const grid=$('avatarGrid');grid.replaceChildren();
+ $('avatarHint').textContent=profile?'Seçtiğin avatar kendi hesabına kaydedilecek.':imgs.length+' avatar hazır · Görsele dokunarak seçebilirsin.';
+ for(const a of imgs){
+  const btn=document.createElement('button');btn.type='button';btn.className='thumb'+((profile?activePlayerAvatarUrl():avatarPick.url)===a.url?' chosen':'');btn.setAttribute('aria-label','Avatarı seç');
+  appendImage(btn,a.url,'contain');
+  btn.onclick=async()=>{
+   if(profile){
+    if(profileAvatarSaving)return;
+    profileAvatarSaving=true;
+    for(const b of grid.querySelectorAll('button'))b.disabled=true;
+    $('avatarHint').textContent='Avatar hesabına kaydediliyor…';
+    try{await persistPlayerAvatarChoice(g,a.url);closeAvatar();note('Profil avatarın hesabına kaydedildi.');}
+    catch(err){$('avatarHint').textContent='Kaydedilemedi: '+String(err.message||err);note('Avatar kaydedilemedi: '+String(err.message||err),5000)}
+    finally{profileAvatarSaving=false;for(const b of grid.querySelectorAll('button'))b.disabled=false}
+   }else{
+    avatarPick={gender:g,url:a.url};writeLocal('avatar',avatarPick);closeAvatar();
+    const row=getScene('Kayıt');if(row&&current==='Kayıt')renderScene(row);
+   }
+  };
+  grid.append(btn);
+ }
+ $('avatarModal').hidden=false;
+}
+function applyMetrics(loaded,total,speed,state){dl.loaded=loaded;dl.total=total;dl.speed=speed;dl.state=state;patchMetrics()}
+async function makeThumb(url,blob){
+ if(!isAvatarAsset(url))return;
+ const key='thumb|'+url;
+ let thumb=await cachedBlob(key);
+ if(!thumb){
+  try{
+    let pic;
+    if(typeof createImageBitmap==='function')pic=await createImageBitmap(blob);
+    else{
+       const tmp=URL.createObjectURL(blob);pic=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=tmp;});URL.revokeObjectURL(tmp);
+    }
+    const sw=pic.width||pic.naturalWidth,sh=pic.height||pic.naturalHeight;
+    if(!sw||!sh)throw Error('Görüntü geçersiz');
+    const factor=Math.min(1,640/Math.max(sw,sh));
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(sw*factor));canvas.height=Math.max(1,Math.round(sh*factor));
+    canvas.getContext('2d',{alpha:true}).drawImage(pic,0,0,canvas.width,canvas.height);
+    thumb=await new Promise((resolve,reject)=>canvas.toBlob(v=>v?resolve(v):reject(Error('Önizleme sıkıştırılamadı')),'image/webp',.86));
+    if(pic.close)pic.close();
+    assetMemory.set(key,thumb);if(db)await idbPut('assets',key,thumb);
+  }catch(e){console.warn('Avatar küçük resim optimizasyonu:',e);thumb=blob}
+ }
+ if(!thumbnailUrls.has(url)){thumbnailUrls.set(url,URL.createObjectURL(thumb))}
+}
+async function decodeThumbs(gallery){
+ // Image decoding is completed before the gallery can open. No remote image fetching on popup.
+ for(const a of [...gallery.erkek,...gallery.kadin]){
+  const u=thumbnailUrls.get(a.url)||imageObjectUrls.get(a.url);if(!u)throw Error('Avatar görseli hazır değil: '+a.path);
+  const im=new Image();im.src=u;
+  try{if(typeof im.decode==='function')await im.decode();else await new Promise((resolve,reject)=>{im.onload=resolve;im.onerror=reject;if(im.complete&&im.naturalWidth)resolve()})}
+  catch(e){throw Error('Avatar resmi çözümlenemedi: '+a.path)}
+ }
+}
+// Incremental downloads: every asset is keyed by its immutable Storage URL.
+// Existing, verified blobs never count as a new download and never trigger a GET.
+let storageWarning=false;
+async function removeCachedAsset(url){
+ assetMemory.delete(url);const image=imageObjectUrls.get(url);if(image){URL.revokeObjectURL(image);imageObjectUrls.delete(url)}
+ const thumb=thumbnailUrls.get(url);if(thumb){URL.revokeObjectURL(thumb);thumbnailUrls.delete(url)}
+ assetMemory.delete('thumb|'+url);
+ if(db){await idbDelete('assets',url);await idbDelete('assets','thumb|'+url)}
+}
+async function incrementalHeadSize(url){
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7500);
+ try{const res=await fetch(url,{method:'HEAD',cache:'no-store',signal:ctrl.signal});return res.ok?Number(res.headers.get('content-length')||0):0}
+ catch(_){return 0}finally{clearTimeout(timer)}
+}
+async function readAsset(url,expected,ctx,foreground){
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),60000);
+ try{
+  const response=await fetch(url,{cache:'no-store',signal:ctrl.signal});
+  if(!response.ok)throw Error('Görsel alınamadı: '+response.status+' '+url.split('/').pop());
+  const declared=Number(response.headers.get('content-length')||0)||Number(expected||0);
+  // Correct any inaccurate server-side size estimate.
+  if(foreground&&declared&&declared!==expected){dl.total+=declared-expected;patchMetrics()}
+  const chunks=[];let bytes=0;
+  const onChunk=chunk=>{
+   chunks.push(chunk);bytes+=chunk.byteLength;ctx.network+=chunk.byteLength;
+   if(foreground){if(!declared){dl.total+=chunk.byteLength;}
+      dl.loaded=ctx.completed+bytes;
+      dl.speed=ctx.network/Math.max((performance.now()-ctx.started)/1000,.2);patchMetrics();}
+  };
+  if(response.body?.getReader){const reader=response.body.getReader();while(true){const {done,value}=await reader.read();if(done)break;onChunk(value)}}
+  else{onChunk(await response.arrayBuffer())}
+  const blob=new Blob(chunks,{type:response.headers.get('content-type')||'application/octet-stream'});
+  if(!blob.size)throw Error('Boş dosya: '+url.split('/').pop());
+  if(foreground&&declared&&blob.size!==declared)dl.total+=blob.size-declared;
+  assetMemory.set(url,blob);
+  if(db){const saved=await idbPut('assets',url,blob);if(!saved)storageWarning=true}
+  if(!imageObjectUrls.has(url))imageObjectUrls.set(url,URL.createObjectURL(blob));
+  await makeThumb(url,blob);
+  return blob.size;
+ }finally{clearTimeout(timer)}
+}
+async function prefetchAssets(b,required=true,gallery=avatars,foreground=true){
+ const urls=assetSources(b,gallery),sizes=new Map();
+ for(const a of [...gallery.erkek,...gallery.kadin])if(Number(a.size)>0)sizes.set(a.url,Number(a.size));
+ const missing=[];
+ // PLAN: inspect local IndexedDB first. Only absent/changed files belong to the download total.
+ for(const url of urls){
+  const expected=Number(sizes.get(url)||0);
+  let blob=await cachedBlob(url);
+  if(blob&&expected&&blob.size!==expected){await removeCachedAsset(url);blob=null}
+  if(blob){if(!imageObjectUrls.has(url))imageObjectUrls.set(url,URL.createObjectURL(blob));await makeThumb(url,blob)}
+  else missing.push({url,bytes:expected});
+ }
+ // For non-avatar images request only metadata (HEAD), not image bytes, when possible.
+ // A server that doesn't report length is handled by live stream accounting below.
+ for(let i=0;i<missing.length;i+=4){
+  await Promise.all(missing.slice(i,i+4).map(async item=>{if(item.bytes>0)return;item.bytes=await incrementalHeadSize(item.url)}));
+ }
+ const ctx={network:0,started:performance.now(),completed:0};
+ if(foreground){dl.loaded=0;dl.total=missing.reduce((n,x)=>n+x.bytes,0);dl.fileCount=missing.length;dl.speed=0;dl.state=missing.length?'downloading':'done';patchMetrics()}
+ for(const item of missing){
+  try{
+   const n=await readAsset(item.url,item.bytes,ctx,foreground);
+   ctx.completed+=n;
+   if(foreground){dl.loaded=ctx.completed;patchMetrics()}
+  }catch(err){console.warn('Yeni oyun dosyası alınamadı:',item.url,err);if(required)throw err}
+ }
+ await decodeThumbs(gallery);
+ if(foreground){dl.loaded=dl.total;dl.speed=0;dl.state='done';patchMetrics()}
+ return {downloadedFiles:missing.length,alreadyCached:urls.length-missing.length,downloadedBytes:ctx.network};
+}
+
+function validateResponse(rows){if(!Array.isArray(rows)||rows.length===0||rows.length>150)throw Error('Yayın listesi geçerli değil');const pack={schema:'tto_player_scene_bundle_v1',scenes:rows.filter(r=>r&&r.page_key&&r.page_name&&r.scene_data&&Array.isArray(r.scene_data.components))};for(const core of ['Karşılama','Yükleme']){if(!pack.scenes.some(x=>x.page_name===core)){const embedded=BOOTSTRAP.scenes.find(x=>x.page_name===core);if(embedded)pack.scenes.unshift(clone(embedded))}}if(!validBundle(pack))throw Error('Yayın paketi hatalı');return pack}
+async function retrievePublished(){const url=CONFIG.url+'/rest/v1/'+CONFIG.table+'?select=page_key,page_name,draft_key,published_at,scene_data&order=published_at.desc';const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),13000);try{const res=await fetch(url,{headers:{apikey:CONFIG.key,Accept:'application/json'},cache:'no-store',signal:ctrl.signal});if(!res.ok)throw Error('Yayın denetimi: '+res.status);return validateResponse(await res.json())}finally{clearTimeout(timer)}}
+// Live update: preserve the current scene until every image and avatar is ready.
+let preparedLive=null,liveApplyTimer=null,liveUpdateVersion=0,queuedLiveCheck=false;
+function isEditingForm(){
+ const active=document.activeElement;
+ return !!(active&&active.matches?.('input,textarea,select,[contenteditable="true"]')&&$('scene').contains(active));
+}
+function applyPreparedLive(){
+ if(!preparedLive)return false;
+ if(moving||auth.working||isEditingForm()||!$('avatarModal').hidden||!$('sceneMenu').hidden){
+   if(!liveApplyTimer)liveApplyTimer=setTimeout(()=>{liveApplyTimer=null;applyPreparedLive()},450);
+   return false;
+ }
+ const {pack,gallery}=preparedLive;preparedLive=null;
+ const visibleKey=$('scene').dataset.pageKey;
+ const name=current;
+ const previousRow=bundle?.scenes.find(row=>row.page_key===visibleKey)||bundle?.scenes.find(row=>row.page_name===name);
+ const avatarListChanged=gallerySignature(gallery)!==gallerySignature(avatars);
+ bundle=pack;avatars=gallery;syncAvatarChoice();
+ const same=pack.scenes.find(row=>row.page_key===visibleKey)||pack.scenes.find(row=>row.page_name===name);
+ const fallback=auth.active?getMainScene():getScene('Giriş');
+ const next=same||fallback||pack.scenes.find(x=>!['Karşılama','Yükleme'].includes(x.page_name));
+ if(next){
+   const currentSceneChanged=!previousRow||previousRow.page_key!==next.page_key||normTime(previousRow.published_at)!==normTime(next.published_at);
+   if(next.page_name===name){
+     if(currentSceneChanged||(avatarListChanged&&name==='Kayıt'))renderScene(next);
+     current=next.page_name;
+   }else{current='';goTo(next.page_name,false)}
+ }
+ // No extra UI elements or notifications added to the manager-authored scene.
+ setStatus('Yayınlanan yeni sahne etkin','ready');
+ return true;
+}
+async function stageUpdate(pack,knownManifest=null){
+ lastCompatibilityReport=ttoAuditSceneBundle(pack);
+ if(!lastCompatibilityReport.ok)throw Error((lastCompatibilityReport.requiresApk?'Uygulama güncellemesi gerekiyor: ':'Yeni sahne verisi/bağlantısı geçersiz: ')+lastCompatibilityReport.blocking.join('; '));
+ const manifest=knownManifest||await fetchGallerySnapshot({allowOffline:false});
+ setStatus('Yayın güncellemesi indiriliyor…','idle');
+ storageWarning=false;
+ await prefetchAssets(pack,true,manifest,false);
+ if(db&&storageWarning)throw Error('Depolama dolu: canlı güncelleme korunamadı.');
+ // All referenced assets must already exist in the in-memory or persistent local cache.
+ for(const url of assetSources(pack,manifest)){
+  if(!((await cachedBlob(url)) instanceof Blob))throw Error('Yayın görseli indirme sırasında eksik kaldı.');
+ }
+ if(!(await idbPromoteLive(pack,manifest)))throw Error('Canlı yayın paketi güvenli kaydedilemedi.');
+ preparedLive={pack,gallery:manifest};++liveUpdateVersion;
+ applyPreparedLive();
+}
+function gallerySignature(g){if(!validGallery(g))return '';return [...g.erkek,...g.kadin].map(a=>a.path+'|'+String(a.size||0)).sort().join(';')}
+async function lookForUpdates(){
+ if(updateRunning){queuedLiveCheck=true;return}
+ if(!navigator.onLine)return;
+ updateRunning=true;
+ try{
+   const latest=await retrievePublished();
+   lastCompatibilityReport=ttoAuditSceneBundle(latest);
+   if(!lastCompatibilityReport.ok){
+    setStatus(lastCompatibilityReport.requiresApk?'Yeni içerik için APK güncellemesi gerekiyor':'Yayınlanan sahnede uyumsuzluk var','warn');
+    if(!window.TTOIncompatibleNotified){window.TTOIncompatibleNotified=true;note(lastCompatibilityReport.requiresApk?'Yeni içerik için APK güncellemesi gerekli. Mevcut sahneler korunuyor.':'Yeni yayınlanan sayfalar henüz hazır değil. Mevcut sürüm korunuyor.',6000)}
+    return;
+   }
+   const remoteGallery=await fetchGallerySnapshot({allowOffline:false});
+   const changed=signature(latest)!==signature(bundle)||gallerySignature(remoteGallery)!==gallerySignature(avatars);
+   if(!changed){setStatus('Sahneler güncel','idle');return}
+   if(preparedLive&&signature(preparedLive.pack)===signature(latest)&&gallerySignature(preparedLive.gallery)===gallerySignature(remoteGallery)){
+    applyPreparedLive();return;
+   }
+   await stageUpdate(latest,remoteGallery);
+ }catch(err){setStatus('Güncelleme indirilemedi · mevcut sahne korunuyor','warn');console.warn('TTO canlı yayın:',err)}
+ finally{
+   updateRunning=false;
+   if(queuedLiveCheck){queuedLiveCheck=false;setTimeout(()=>void lookForUpdates(),200)}
+ }
+}
+async function completeInitialLoad(){
+ // On a new app launch, obtain the latest published snapshot before leaving Loading.
+ // Once login is visible, lookForUpdates stages changes only for a future restart.
+ $('loadGate').hidden=false;
+ $('retryLoad').hidden=true;
+ let activeAtBoot=bundle;
+ try{
+   loadingLabel('Yayınlanan sahneler kontrol ediliyor…','Güncel oyun sürümü hazırlanıyor.');
+   const published=await retrievePublished();
+   lastCompatibilityReport=ttoAuditSceneBundle(published);
+   if(validBundle(published)&&lastCompatibilityReport.ok)activeAtBoot=published;
+   else if(!lastCompatibilityReport.ok)console.warn('TTO motor uyumluluk uyarısı:',lastCompatibilityReport.blocking);
+ }catch(e){console.warn('TTO: yayın kontrolü kullanılamıyor, kayıtlı sahneler hazırlanacak',e)}
+ const gallery=await fetchGallerySnapshot({allowOffline:true});
+ await prefetchAssets(activeAtBoot,true,gallery,true);
+ bundle=activeAtBoot;
+ avatars=gallery;
+ syncAvatarChoice();
+ if(db){const saved=await idbPut('state','active',bundle);await idbPut('state','activeGallery',gallery);
+   if(!saved||storageWarning)console.warn('TTO: Cihaz kalıcı depolaması kısıtlı; sonraki açılışta yeniden indirme gerekebilir');}
+ else {writeLocal('active',bundle);writeLocal('gallery',gallery)}
+ $('loadGate').hidden=true;
+ return true;
+}
+// Native Supabase Realtime protocol 1.0.0: notifications contain no UI and only signal a refetch.
+let startupCheckStarted=false,liveSocket=null,liveSocketReady=false,liveReconnectTimer=null,liveHeartbeat=null,liveRef=0,liveJoinId=null,liveSubscriptionIds=[];
+let liveEventTimer=null,liveClosed=false;
+const liveTopic='realtime:tto-player-published-scenes';
+function liveSend(event,topic,payload,joinRef=null){
+ if(!liveSocket||liveSocket.readyState!==1)return;
+ const ref=String(++liveRef);liveSocket.send(JSON.stringify({topic,event,payload,ref,join_ref:joinRef}));return ref;
+}
+function notifyLivePublish(){
+ clearTimeout(liveEventTimer);
+ liveEventTimer=setTimeout(()=>void lookForUpdates(),300);
+}
+function startLiveSubscription(){
+ if(liveClosed||!navigator.onLine||typeof WebSocket!=='function')return;
+ if(liveSocket&&[0,1].includes(liveSocket.readyState))return;
+ clearTimeout(liveReconnectTimer);
+ try{
+  const addr=CONFIG.url.replace(/^https:/,'wss:')+'/realtime/v1/websocket?apikey='+encodeURIComponent(CONFIG.key)+'&vsn=1.0.0';
+  const sock=new WebSocket(addr);liveSocket=sock;liveSocketReady=false;
+  sock.onopen=()=>{
+    if(liveSocket!==sock)return;
+    liveJoinId=liveSend('phx_join',liveTopic,{config:{private:false,broadcast:{ack:false,self:false},presence:{enabled:false},postgres_changes:[{event:'*',schema:'public',table:CONFIG.table}]}});
+    clearInterval(liveHeartbeat);
+    liveHeartbeat=setInterval(()=>{if(sock.readyState===1)liveSend('heartbeat','phoenix',{})},25000);
+  };
+  sock.onmessage=event=>{
+    if(liveSocket!==sock)return;
+    let message;try{message=JSON.parse(event.data)}catch(_){return}
+    if(message.event==='phx_reply'&&message.ref===liveJoinId){
+      if(message.payload?.status==='ok'){
+        liveSocketReady=true;
+        liveSubscriptionIds=(message.payload.response?.postgres_changes||[]).map(x=>x.id);
+        notifyLivePublish(); // Close the join/fetch race: check once after subscribing.
+      }else{console.warn('TTO canlı yayın aboneliği reddedildi.');sock.close()}
+    }
+    if(message.event==='postgres_changes'&&message.topic===liveTopic){
+      const eventIds=message.payload?.ids||[];
+      if(message.payload?.data?.table===CONFIG.table && (!liveSubscriptionIds.length||eventIds.some(id=>liveSubscriptionIds.includes(id))))notifyLivePublish();
+    }
+    if(message.event==='phx_error'||message.event==='phx_close'){sock.close()}
+  };
+  sock.onerror=()=>{liveSocketReady=false};
+  sock.onclose=()=>{
+    if(liveSocket!==sock)return;
+    liveSocket=null;liveSocketReady=false;clearInterval(liveHeartbeat);liveHeartbeat=null;
+    if(!liveClosed){clearTimeout(liveReconnectTimer);liveReconnectTimer=setTimeout(startLiveSubscription,3500)}
+  };
+ }catch(err){console.warn('Canlı bağlantı kurulamıyor:',err);clearTimeout(liveReconnectTimer);liveReconnectTimer=setTimeout(startLiveSubscription,6000)}
+}
+function startBackgroundChecks(){
+ if(startupCheckStarted)return;startupCheckStarted=true;
+ startLiveSubscription();
+ setTimeout(()=>void lookForUpdates(),2300);
+ // WebSocket is normally instant; periodic polling covers offline, sleeping or blocked sockets.
+ setInterval(()=>{if(!document.hidden)void lookForUpdates()},25000);
+ window.addEventListener('online',()=>{startLiveSubscription();notifyLivePublish()});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){startLiveSubscription();notifyLivePublish()}});
+ window.addEventListener('beforeunload',()=>{
+    liveClosed=true;clearTimeout(liveReconnectTimer);clearTimeout(liveEventTimer);clearInterval(liveHeartbeat);
+    try{liveSocket?.close()}catch(_){}
+    for(const u of imageObjectUrls.values())URL.revokeObjectURL(u);
+    for(const u of thumbnailUrls.values())URL.revokeObjectURL(u);
+ });
+}
+async function finishBoot(){
+ $('retryLoad').hidden=true;
+ loadingLabel('Son dosyalar kontrol ediliyor…','Avatarlar ve arayüz öğeleri hazırlanıyor.');
+ try{
+   await completeInitialLoad();
+   // A cached package may finish before the 2-second scene animation ends.
+   // Wait rather than silently ignoring the login transition while moving=true.
+   while(moving)await sleep(80);
+   const hasAuth=await bootAuthPromise;
+   if(getScene('Giriş'))goTo('Giriş',true);
+   else if(hasAuth&&getMainScene())goTo(getMainScene().page_name,true);
+   else goTo(bundle.scenes.find(x=>!['Karşılama','Yükleme'].includes(x.page_name))?.page_name||homeName(),true);
+   startBackgroundChecks();
+   window.TTOPlayer={getScreen:()=>current,getScreens:()=>bundle.scenes.map(x=>x.page_name),goto:name=>goTo(name),getSignature:()=>signature(bundle),checkUpdates:lookForUpdates,applyPrepared:applyPreparedLive,isRealtimeConnected:()=>liveSocketReady,status:()=>({...dl}),getAuth:()=>!!auth.active,getPlayerAvatarUrl:activePlayerAvatarUrl,openProfileAvatarSelector,engineVersion:TTO_ENGINE_VERSION,getCompatibility:()=>JSON.parse(JSON.stringify(lastCompatibilityReport)),avatarCount:()=>({erkek:avatars.erkek.length,kadin:avatars.kadin.length}),checkCompatibility:ttoAuditSceneBundle,getCompatibility:()=>clone(lastCompatibilityReport),engineVersion:TTO_ENGINE_VERSION};
+ }catch(err){
+   console.warn('TTO: eksik dosyayla girişe izin verilmedi:',err);
+   dl.state='error';dl.speed=0;patchMetrics();
+   loadingLabel('Tüm oyun dosyaları indirilemedi',String(err?.message||err)+' · İnternet bağlantını kontrol edip yeniden dene.',true);
+ }
+}
+let bootAuthPromise=Promise.resolve(false);
+async function start(){
+ try{
+   await initStorage();if(!validBundle(bundle))throw Error('Sahne paketi yok');
+   current='';goTo(homeName(),false);
+   bootAuthPromise=restoreSession().catch(()=>false);
+   await sleep(1800);
+   if(getScene('Yükleme'))goTo('Yükleme',true);
+   // Transition can still animate while the real download happens; no time-based skip.
+   await sleep(800);
+   await finishBoot();
+ }catch(err){console.warn('TTO başlatma hatası:',err);note('Oyuncu başlatılamadı: '+err.message,10000)}
+}
+$('retryLoad').onclick=()=>void finishBoot();
+$('sceneMenuBtn').onclick=()=>{};$('closeMenu').onclick=closeMenu;$('closeAvatar').onclick=closeAvatar;$('avatarProfileMale').onclick=()=>openAvatar('erkek','profile');$('avatarProfileFemale').onclick=()=>openAvatar('kadin','profile');$('nextButton').onclick=nextScene;
+$('logoutBtn').onclick=()=>void doLogout();$('enterGameBtn').onclick=()=>{enterPublishedHome()};
+window.addEventListener('resize',()=>{if(!document.activeElement?.classList?.contains('scene-input'))updateStageFit();fitText();/* Keep focused form controls mounted while Android keyboard changes viewport size. */});
+window.TTOEngineAudit={check:ttoAuditSceneBundle,version:TTO_ENGINE_VERSION,supportedKinds:[...TTO_SUPPORTED_KINDS],supportedActions:[...TTO_SUPPORTED_ACTIONS],supportedCapabilities:[...TTO_SUPPORTED_CAPABILITIES]};
+start();
+})();
+</script>
+</body>
+</html>
