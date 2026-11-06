@@ -53,7 +53,7 @@ jobs:
           cat > package.json <<'EOF'
           {
             "name": "tto-oyuncu",
-            "version": "2.4.0",
+            "version": "2.6.0",
             "private": true,
             "type": "module",
             "dependencies": {
@@ -94,7 +94,7 @@ jobs:
       - name: Oyuncu APK dosyasini yayinla
         uses: actions/upload-artifact@v4
         with:
-          name: TTO-Oyuncu-v2.4-Debug-APK
+          name: TTO-Oyuncu-v2.6-Debug-APK
           path: player-build/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
