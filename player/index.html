@@ -539,6 +539,10 @@ function fillBackground(scene){
  const shade=clamp(c.backgroundShade??0,0,.85);
  // The editor owns image fit; do not override a published 100% 100% or contain setting.
  const fit=['cover','contain','100% 100%'].includes(c.backgroundFit)?c.backgroundFit:'cover';
+ // Non-tablet aspect ratios use crop-to-cover, not image deformation.
+ // The authored 100%-by-100% fit is unchanged on the reference tablet.
+ const screenRatio=ttoLastFit.logicalWidth/ttoLastFit.logicalHeight;
+ const imageFit=fit==='100% 100%'&&Math.abs(screenRatio-DESIGN_W/DESIGN_H)>.012?'cover':fit;
  const pos=['center','top','bottom','left','right'].includes(c.backgroundPosition)?c.backgroundPosition:'center';
  const panorama=c.backgroundScroll==='horizontal'?setupPanorama(el,c):null;
  const paint=(u)=>{
@@ -548,7 +552,7 @@ function fillBackground(scene){
    panorama.layer.style.backgroundImage=shadeLayer+',url("'+u+'")';
    el.style.backgroundImage='none';
   }else el.style.backgroundImage=shadeLayer+',url("'+u+'")';
-  if(!panorama)el.style.backgroundSize='100% 100%, '+fit;
+  if(!panorama)el.style.backgroundSize='100% 100%, '+imageFit;
   if(!panorama)el.style.backgroundPosition='center, '+pos;
   el.style.backgroundRepeat='no-repeat';
   if(outer){outer.style.backgroundImage=`linear-gradient(rgba(4,12,24,.23),rgba(4,12,24,.23)),url("${u}")`;outer.style.backgroundSize='cover';outer.style.backgroundPosition='center';outer.style.backgroundRepeat='no-repeat'}
