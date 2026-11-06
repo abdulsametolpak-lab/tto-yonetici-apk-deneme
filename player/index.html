@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#07121d">
-<title>Türkiye Ticaret Online · Oyuncu v2.3 Profil Avatarı</title>
+<title>Türkiye Ticaret Online · Oyuncu v2.6 Evrensel Ölçek</title>
 <style>
 :root{color-scheme:dark;--gold:#e4be7e;--cream:#fff0ce;--blue:#89aac7;--surface:#091a2c;--ease:cubic-bezier(.2,.7,.2,1)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040b12;color:var(--cream);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.52;cursor:wait}
@@ -171,6 +171,15 @@ body{display:block!important;background:#06101c!important}
 .layer.player-avatar-button{display:grid!important;place-items:center!important;overflow:hidden!important;padding:0!important;background-image:none!important;}
 .layer.player-avatar-button img{display:block;width:100%;height:100%;max-height:100%;max-width:100%;object-fit:contain!important;object-position:center;pointer-events:none;user-select:none;}
 .layer .player-avatar-blank{display:block;width:47%;height:58%;max-width:54px;max-height:70px;background:linear-gradient(#e9c891,#c18b4b);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M3 21v-2a9 9 0 0 1 18 0v2z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M3 21v-2a9 9 0 0 1 18 0v2z'/%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none;}
+
+/* v2.6: the virtual tablet canvas alone defines all scene coordinates.
+   The unclipped full-screen backdrop is decorative; it never changes UI size. */
+#designViewport{width:800px!important;height:1280px!important;}
+#designViewport #scene,#designViewport .old-scene{width:100%!important;height:100%!important;}
+#designViewport .layer[data-kind="text"],#designViewport .layer[data-kind="label"],
+#designViewport .layer[data-kind="heading"]{overflow-wrap:normal;word-break:normal;}
+#designViewport .layer[data-kind="image"] img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:cover;object-position:center;pointer-events:none;}
+
 </style>
 </head>
 <body>
@@ -263,17 +272,65 @@ function ttoAuditSceneBundle(input){
  const unique=a=>[...new Set(a)];
  return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
 }
-const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.5.0'});
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.6.0'});
 const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
-const DESIGN_W=390,DESIGN_H=844;
+// TTO v2.6: one reference viewport for the published tablet design.
+// Every element has one authored reference size. Extra screen width/height only
+// changes the spacing BETWEEN elements, never their font, border, shape or image size.
+const DESIGN_W=800, DESIGN_H=1280;
+const TTO_AUTHORING_FONT_REFERENCE_H=844;
+let ttoLastFit={width:0,height:0,scale:0,logicalWidth:DESIGN_W,logicalHeight:DESIGN_H};
 function updateStageFit(){
- // Render each scene in the portrait tablet's original aspect ratio, then fit it
- // uniformly within the device. No per-axis stretching, no mismatched text scaling.
- const viewport=$('designViewport');if(!viewport)return;
- const w=window.visualViewport?.width||window.innerWidth||390;
- const h=window.visualViewport?.height||window.innerHeight||844;
- const factor=Math.min(w/800,h/1280);
- viewport.style.setProperty('--tto-uniform-scale',String(Math.max(.05,factor)));
+ const viewport=$('designViewport');if(!viewport)return false;
+ const w=app.clientWidth||window.innerWidth||DESIGN_W;
+ const h=app.clientHeight||window.innerHeight||DESIGN_H;
+ const factor=Math.max(.05,Math.min(w/DESIGN_W,h/DESIGN_H));
+ // The space extra to a 10:16 rectangle is LAYOUT space, not extra size.
+ // Text/images/panels/buttons keep the identical reference dimensions.
+ const logicalWidth=w/factor, logicalHeight=h/factor;
+ const diff=Math.abs(ttoLastFit.scale-factor)>.00001||
+    Math.abs(ttoLastFit.logicalWidth-logicalWidth)>.05||
+    Math.abs(ttoLastFit.logicalHeight-logicalHeight)>.05;
+ viewport.style.setProperty('--tto-uniform-scale',String(factor));
+ viewport.style.setProperty('width',logicalWidth+'px','important');
+ viewport.style.setProperty('height',logicalHeight+'px','important');
+ viewport.dataset.referenceSize=DESIGN_W+'x'+DESIGN_H;
+ ttoLastFit={width:w,height:h,scale:factor,logicalWidth,logicalHeight};
+ return diff;
+}
+function ttoLayoutBox(c){
+ const px=(n,fallback)=>Number.isFinite(Number(n))?Number(n):fallback;
+ const x=Math.max(0,Math.min(100,px(c.x,0)))/100*DESIGN_W;
+ const y=Math.max(0,Math.min(100,px(c.y,0)))/100*DESIGN_H;
+ const width=Math.max(.01,Math.min(100,px(c.width,10)))/100*DESIGN_W;
+ const height=Math.max(.01,Math.min(100,px(c.height,10)))/100*DESIGN_H;
+ const extraX=ttoLastFit.logicalWidth-DESIGN_W;
+ const extraY=ttoLastFit.logicalHeight-DESIGN_H;
+ // Spread the centers of elements across the available screen while keeping
+ // each element's aspect ratio, radius, font and image size UNCHANGED.
+ const centerX=(x+width/2)/DESIGN_W;
+ const centerY=(y+height/2)/DESIGN_H;
+ return {left:x+extraX*centerX,top:y+extraY*centerY,width,height};
+}
+function ttoPositionElement(el,c){
+ const box=ttoLayoutBox(c);
+ el.style.left=box.left+'px';el.style.top=box.top+'px';
+ el.style.width=box.width+'px';el.style.height=box.height+'px';
+ if((c.kind||c.type)==='ring'||(c.kind||c.type)==='social'){
+  const side=Math.min(box.width,box.height);
+  el.style.left=(box.left+(box.width-side)/2)+'px';
+  el.style.top=(box.top+(box.height-side)/2)+'px';
+  el.style.width=side+'px';el.style.height=side+'px';
+ }
+}
+function ttoRelayoutElements(){
+ for(const el of $('layers').querySelectorAll('.layer')){
+  const c=el.__ttoComponent;if(!c)continue;
+  ttoPositionElement(el,c);
+  if((c.kind||c.type)==='avatar'){
+   const img=el.querySelector('img');if(img?.naturalWidth)fitAvatarFrame(el,img,c);
+  }
+ }
 }
 
 const MAIN=['Karşılama','Yükleme','Giriş','Kayıt','Anasayfa'];const BOOTSTRAP=JSON.parse($('builtInScenes').textContent);
@@ -457,7 +514,7 @@ function setupPanorama(root,bg){
  },{signal:controller.signal});
  root.addEventListener('pointermove',ev=>{
   if(!drag||drag.id!==ev.pointerId)return;
-  const travel=root.clientWidth*(width/100-1);
+  const travel=root.getBoundingClientRect().width*(width/100-1);
   if(travel<1)return;
   percent=clamp(drag.start-(ev.clientX-drag.startX)*100/travel*sensitivity,0,100);
   apply();
@@ -501,50 +558,72 @@ function fillBackground(scene){
 }
 
 function appendImage(target,url,fit='contain',onLoaded){const im=document.createElement('img');im.alt='';im.loading='eager';im.decoding='async';im.draggable=false;im.style.objectFit=fit;if(onLoaded)im.addEventListener('load',()=>onLoaded(im),{once:true});target.append(im);if(allowAssetUrl(url)){im.src=directAsset(url);if(!imageObjectUrls.has(url)&&!thumbnailUrls.has(url))resolveAsset(url).then(u=>{if(u&&im.isConnected&&im.src!==u)im.src=u})}return im}
-// TTO v2.4: shared responsive typography. Keep the five-column menu readable on narrow phones.
-function ttoFitLayerText(node, base, scale, kind){
- if(['avatar','social','ring','decor','progress','image'].includes(kind))return;
+// TTO v2.6: fit typography in the SAME 800x1280 authored coordinate space
+// regardless of device. Never shrink font a second time because of phone width.
+function ttoTextFits(node){
+ const parent=node.getBoundingClientRect();
+ if(!parent.width||!parent.height)return true;
+ const range=document.createRange();range.selectNodeContents(node);
+ const rects=Array.from(range.getClientRects());
+ const epsilon=.65;
+ for(const r of rects){
+  if(!r.width||!r.height)continue;
+  if(r.left<parent.left-epsilon||r.right>parent.right+epsilon||
+     r.top<parent.top-epsilon||r.bottom>parent.bottom+epsilon)return false;
+ }
+ // The range geometry is necessary: scrollWidth alone under-reports the overflow
+ // of centered flex children and could leave both ends of a word clipped.
+ return node.scrollWidth<=node.clientWidth+2&&node.scrollHeight<=node.clientHeight+2;
+}
+function ttoFitLayerText(node,base,kind){
+ if(['avatar','social','ring','decor','progress','image'].includes(kind)||
+    (kind==='button'&&node.dataset.avatarBinding==='playerAvatar'))return;
  const raw=Math.max(1,Number(base)||12);
- const availableWidth=Math.max(1,node.clientWidth-4);
- const availableHeight=Math.max(1,node.clientHeight-2);
- const text=(node.textContent||'').trim();
- const override=Number(node.dataset.phoneFontSize);
- const target=Math.max(5,((innerWidth<600&&override>0)?override:raw)*scale);
- node.style.fontSize=target+'px';
- if(['input','toggle','checkbox','select','date'].includes(kind))return;
- if(!text)return;
- node.style.overflowWrap='normal';
- node.style.wordBreak='normal';
+ const target=Math.max(4.5,raw*DESIGN_H/TTO_AUTHORING_FONT_REFERENCE_H);
+ node.style.fontSize=target.toFixed(3)+'px';
+ if(['input','toggle','checkbox','select','date','slider','radio'].includes(kind))return;
+ if(!(node.textContent||'').trim())return;
  node.style.lineHeight='1.12';
  node.style.whiteSpace='normal';
- // Search the largest size that actually fits, rather than shrinking in arbitrary half-pixel steps.
- let lo=4.5,hi=target,best=lo;
- for(let i=0;i<13;i++){
-  const size=(lo+hi)/2;node.style.fontSize=size+'px';
-  if(node.scrollWidth<=availableWidth+4&&node.scrollHeight<=availableHeight+2){best=size;lo=size}else hi=size;
+ node.style.overflowWrap='normal';node.style.wordBreak='normal';
+ node.style.padding=kind==='button'?'1px 2px':kind==='text'?'0 1px':'';
+ // First prefer whole words, mirroring the editor. Only permit emergency
+ // wrapping for a label that otherwise clips at the readable minimum.
+ const optimize=()=>{
+  let low=4.5,high=target,best=0;
+  for(let i=0;i<15;i++){
+   const mid=(low+high)/2;
+   node.style.fontSize=mid.toFixed(3)+'px';
+   if(ttoTextFits(node)){best=mid;low=mid}else high=mid;
+  }
+  return best;
+ };
+ let best=optimize();
+ if(best<Math.min(target*.68,8)){
+  node.style.overflowWrap='anywhere';node.style.wordBreak='normal';
+  const wrapped=optimize();
+  if(wrapped>best)best=wrapped;
+  else node.style.overflowWrap='normal';
  }
- node.style.fontSize=Math.max(4.5,best).toFixed(2)+'px';
+ node.style.fontSize=Math.max(4.5,best||4.5).toFixed(2)+'px';
 }
 function fitText(){
  const wrap=$('scene');if(!wrap)return;
- const sw=wrap.clientWidth||390, sh=wrap.clientHeight||844;
- const scale=1.52;
- for(const e of wrap.querySelectorAll('.layer'))ttoFitLayerText(e,e.dataset.baseSize,scale,e.dataset.kind);
+ for(const e of wrap.querySelectorAll('.layer'))ttoFitLayerText(e,e.dataset.baseSize,e.dataset.kind);
 }
 
-function fitAvatarFrame(box,img,origin){if(!img.naturalWidth||!img.naturalHeight)return;const stage=$('scene');if(!stage.clientWidth||!stage.clientHeight)return;const ow=origin.width,oh=origin.height;const widthPx=ow/100*stage.clientWidth,heightPx=oh/100*stage.clientHeight;const ratio=img.naturalWidth/img.naturalHeight;let w=heightPx*ratio,h=heightPx;if(w>widthPx){w=widthPx;h=widthPx/ratio}const originalL=Number(origin.x)/100*stage.clientWidth,originalT=Number(origin.y)/100*stage.clientHeight;box.style.width=100*w/stage.clientWidth+'%';box.style.height=100*h/stage.clientHeight+'%';box.style.left=100*(originalL+(widthPx-w)/2)/stage.clientWidth+'%';box.style.top=100*(originalT+(heightPx-h)/2)/stage.clientHeight+'%'}
+function fitAvatarFrame(box,img,origin){if(!img.naturalWidth||!img.naturalHeight)return;const stage=$('scene');if(!stage.clientWidth||!stage.clientHeight)return;const frame=ttoLayoutBox(origin);const widthPx=frame.width,heightPx=frame.height;const ratio=img.naturalWidth/img.naturalHeight;let w=heightPx*ratio,h=heightPx;if(w>widthPx){w=widthPx;h=widthPx/ratio}const originalL=Number(origin.x)/100*stage.clientWidth,originalT=Number(origin.y)/100*stage.clientHeight;box.style.width=100*w/stage.clientWidth+'%';box.style.height=100*h/stage.clientHeight+'%';box.style.left=100*(originalL+(widthPx-w)/2)/stage.clientWidth+'%';box.style.top=100*(originalT+(heightPx-h)/2)/stage.clientHeight+'%'}
 function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return null;const e=document.createElement('div');const kind=String(c.kind||c.type||'panel');e.className='layer';e.dataset.kind=kind;e.dataset.baseSize=c.fontSize||12;e.dataset.phoneFontSize=c.phoneFontSize||'';if(c.metricKey)e.dataset.metric=c.metricKey;e.dataset.variant=c.variant||'glass';e.dataset.motion=c.motion||'';e.dataset.fieldRole=c.fieldRole||'';e.dataset.action=c.action||'';
- e.style.left=clamp(c.x,0,100)+'%';e.style.top=clamp(c.y,0,100)+'%';e.style.width=clamp(c.width,1,100)+'%';e.style.height=clamp(c.height,0.2,100)+'%';e.style.borderRadius=clamp(c.radius??10,0,999)+'px';e.style.color=c.color||'#f9e6c4';e.style.opacity=c.opacity??1;e.style.fontWeight=c.fontWeight||'';e.style.textAlign=c.textAlign||'center';e.style.fontSize=(Math.max(4.5,Number(c.fontSize)||12))+'px';
+ e.__ttoComponent=c;ttoPositionElement(e,c);e.style.borderRadius=clamp(c.radius??10,0,999)+'px';e.style.color=c.color||'#f9e6c4';e.style.opacity=c.opacity??1;e.style.fontWeight=c.fontWeight||'';e.style.fontFamily=c.fontFamily||'';e.style.textAlign=c.textAlign||'center';e.style.fontSize=(Math.max(4.5,Number(c.fontSize)||12))+'px';
+ if(c.src&&kind!=='image'&&kind!=='social'&&kind!=='avatar'&&!(kind==='button'&&c.imageSource==='playerAvatar')&&allowAssetUrl(c.src)){
+  const assignSrc=u=>{if(!e.isConnected&&e.dataset.pageKey)return;e.style.backgroundImage='linear-gradient(#08162655,#08162655),url(\"'+u.replace(/[\"'\\\r\n]/g,'')+'\")';e.style.backgroundPosition='center';e.style.backgroundSize='cover';};
+  assignSrc(directAsset(c.src));resolveAsset(c.src).then(u=>{if(u&&e.isConnected)assignSrc(u)});
+ }
  if(kind==='panel'||kind==='card'){if(c.text)e.textContent=visibleText(c.text);return e}if(kind==='decor')return e;
  if(['text','label','heading'].includes(kind)){if(c.metricKey){e.classList.add('metric');if(c.compactMetric){const lbl=document.createElement('span');lbl.className='label';lbl.textContent=visibleText(c.metricLabel||'');const val=document.createElement('strong');val.className='value';val.textContent=metric(c.metricKey);e.append(lbl,val)}else e.textContent=metric(c.metricKey)}else e.textContent=visibleText(c.text||'');return e}
  if(kind==='ring'){
-  // Compute the actual square in CSS pixels, never use the design mockup's aspect ratio.
-  const stage=$('scene'),sw=stage.clientWidth||DESIGN_W,sh=stage.clientHeight||DESIGN_H;
-  const boxW=clamp(c.width,1,100)/100*sw,boxH=clamp(c.height,.2,100)/100*sh;
-  const diameter=Math.max(1,Math.min(boxW,boxH));
-  e.style.left=(clamp(c.x,0,100)*sw/100+(boxW-diameter)/2)+'px';
-  e.style.top=(clamp(c.y,0,100)*sh/100+(boxH-diameter)/2)+'px';
-  e.style.width=diameter+'px';e.style.height=diameter+'px';
+  const frame=ttoLayoutBox(c);
+  const diameter=Math.max(1,Math.min(frame.width,frame.height));
   e.style.fontSize=Math.max(13,Math.min(28,diameter*.13))+'px';
   const pct=dl.total?clamp(dl.loaded/dl.total*100,0,100):(dl.state==='done'?100:0);
   e.style.setProperty('--ring-pct',pct+'%');const label=document.createElement('span');label.className='ring-value';label.textContent=Math.round(pct)+'%';e.append(label);return e
@@ -560,18 +639,12 @@ function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return nu
  if(kind==='toggle'||kind==='checkbox'){const input=document.createElement('input');input.type='checkbox';input.checked=c.fieldRole==='rememberMe'?inputValues.rememberMe:!!c.checked;input.onchange=()=>{if(c.fieldRole==='rememberMe'){inputValues.rememberMe=input.checked;if(!input.checked){try{localStorage.removeItem(KEY+'_rememberEmail')}catch(_){} }} };const label=document.createElement('span');label.textContent=visibleText(c.text||'');e.append(input,label);return e}
  if(kind==='avatar'){e.setAttribute('role','button');e.tabIndex=0;const gender=c.avatarGender==='kadin'?'kadin':'erkek';e.setAttribute('aria-label',gender==='erkek'?'Erkek avatar galerisi':'Kadın avatar galerisi');e.dataset.gender=gender;const photo=avatarPick.gender===gender&&avatarPick.url?avatarPick.url:c.src;const im=appendImage(e,photo,'fill',img=>fitAvatarFrame(e,img,c));if(avatarPick.gender===gender)e.classList.add('selected');if(im.complete&&im.naturalWidth)fitAvatarFrame(e,im,c);e.onclick=()=>{avatarPick={gender,url:photo||''};writeLocal('avatar',avatarPick);$('scene').querySelectorAll('.layer[data-kind="avatar"]').forEach(x=>x.classList.toggle('selected',x.dataset.gender===gender));const now=Date.now();if(lastTap.name===gender&&now-lastTap.time<400){openAvatar(gender);lastTap.time=0}else lastTap={name:gender,time:now}};e.ondblclick=ev=>{ev.preventDefault();lastTap.time=0;openAvatar(gender)};e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openAvatar(gender)}};return e}
  if(kind==='social'){
-  // Square social-image buttons should not stretch when the phone aspect ratio changes.
-  const stage=$('scene'),sw=stage.clientWidth||DESIGN_W,sh=stage.clientHeight||DESIGN_H;
-  const pw=clamp(c.width,1,100)*sw/100,ph=clamp(c.height,.2,100)*sh/100;
-  const side=Math.min(pw,ph);
-  e.style.left=(clamp(c.x,0,100)*sw/100+(pw-side)/2)+'px';
-  e.style.top=(clamp(c.y,0,100)*sh/100+(ph-side)/2)+'px';
-  e.style.width=side+'px';e.style.height=side+'px';
+  // Geometry was made square by ttoPositionElement, in reference units.
   e.setAttribute('role','button');e.tabIndex=0;e.setAttribute('aria-label',(c.socialPlatform||'Sosyal')+' bağlantısı');appendImage(e,c.src,'contain');e.onclick=()=>{const url=safeLink(c.target);if(url)window.open(url,'_blank','noopener,noreferrer');else note('Bu sosyal medya butonuna henüz bağlantı atanmamış.')};e.onkeydown=ev=>{if(ev.key==='Enter')e.click()};return e}
  if(kind==='image'){appendImage(e,c.src,'cover');return e}
  if(kind==='button'){e.setAttribute('role','button');e.tabIndex=0;if(c.imageSource==='playerAvatar'){e.dataset.avatarBinding='playerAvatar';e.classList.add('player-avatar-button');e.setAttribute('aria-label','Oyuncu profil avatarı');const imageUrl=activePlayerAvatarUrl();if(imageUrl)appendImage(e,imageUrl,'contain');else{const placeholder=document.createElement('span');placeholder.className='player-avatar-blank';placeholder.setAttribute('aria-hidden','true');e.append(placeholder)}}else e.textContent=visibleText(c.text||'');e.onclick=()=>{if(c.imageSource==='playerAvatar'&&(!c.action||c.action==='none'))return openProfileAvatarSelector();return handleButton(c,scene)};e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();e.click()}};return e}
  e.textContent=visibleText(c.text||'');return e}
-function renderScene(row){if(!row)return;updateStageFit();const scene=$('scene'),layers=$('layers');scene.dataset.pageKey=row.page_key;scene.dataset.fx=row.scene_data.sceneFx||'';fillBackground(row);layers.replaceChildren();for(const c of row.scene_data.components||[]){const el=elem(c,row);if(el)layers.append(el)}requestAnimationFrame(fitText);$('nextButton').hidden=true}
+function renderScene(row){if(!row)return;updateStageFit();const scene=$('scene'),layers=$('layers');scene.dataset.pageKey=row.page_key;scene.dataset.fx=row.scene_data.sceneFx||'';fillBackground(row);layers.replaceChildren();for(const c of row.scene_data.components||[]){const el=elem(c,row);if(el)layers.append(el)}requestAnimationFrame(fitText);if(document.fonts?.ready)document.fonts.ready.then(()=>{if($('scene').dataset.pageKey===row.page_key)fitText()});$('nextButton').hidden=true}
 function fxClasses(info){const s=String(info||'');if(s.includes('left'))return ['out-left','in-left'];if(s.includes('right'))return ['out-right','in-right'];if(/zoom|scale|grow|shrink/.test(s))return ['out-zoom','in-zoom'];return ['out-fade','in-fade']}
 function renderMenu(){const target=$('sceneButtons');target.replaceChildren();const pages=bundle.scenes.slice().sort((a,b)=>{const ai=MAIN.indexOf(a.page_name),bi=MAIN.indexOf(b.page_name);return (ai<0?100:ai)-(bi<0?100:bi)});for(const row of pages){const btn=document.createElement('button');btn.className='pickPage'+(current===row.page_name?' active':'');const strong=document.createElement('strong');strong.textContent=visibleText(row.page_name);const small=document.createElement('small');small.textContent='Yayınlanmış sahne';btn.append(strong,small);btn.onclick=()=>{closeMenu();goTo(row.page_name,true)};target.append(btn)}}
 function goTo(name,effect=true){const row=getScene(name);if(!row||moving)return;clearTimeout(autoTimer);autoTimer=0;const old=current;current=row.page_name;const prev=$('scene'),parent=prev.parentElement;const nxt=prev.cloneNode(false);nxt.id='scene';nxt.className='';nxt.replaceChildren();const lay=document.createElement('div');lay.id='layers';nxt.append(lay);prev.id='';prev.classList.add('old-scene','snapshot-out');parent.insertBefore(nxt,prev);renderScene(row);if(old&&effect&&!hasUserReducedMotion()){const from=getScene(old);const classes=fxClasses(from?.scene_data?.transition?.exit);const entry=fxClasses(row.scene_data?.transition?.enter);const duration=clamp(row.scene_data?.transition?.duration||450,180,1800);nxt.style.setProperty('--duration',duration+'ms');prev.style.setProperty('--duration',duration+'ms');nxt.classList.add('enter-fx',entry[1]);prev.classList.add(classes[0]);moving=true;setTimeout(()=>{prev.remove();nxt.classList.remove('enter-fx',entry[1]);moving=false},duration+50)}else prev.remove();}
@@ -972,7 +1045,7 @@ async function start(){
 $('retryLoad').onclick=()=>void finishBoot();
 $('sceneMenuBtn').onclick=()=>{};$('closeMenu').onclick=closeMenu;$('closeAvatar').onclick=closeAvatar;$('avatarProfileMale').onclick=()=>openAvatar('erkek','profile');$('avatarProfileFemale').onclick=()=>openAvatar('kadin','profile');$('nextButton').onclick=nextScene;
 $('logoutBtn').onclick=()=>void doLogout();$('enterGameBtn').onclick=()=>{enterPublishedHome()};
-window.addEventListener('resize',()=>{if(!document.activeElement?.classList?.contains('scene-input'))updateStageFit();fitText();/* Keep focused form controls mounted while Android keyboard changes viewport size. */});
+window.addEventListener('resize',()=>{if(!document.activeElement?.classList?.contains('scene-input')){updateStageFit();ttoRelayoutElements()}fitText();/* Focused form controls stay mounted while the keyboard changes viewport dimensions. */});
 window.TTOEngineAudit={check:ttoAuditSceneBundle,version:TTO_ENGINE_VERSION,supportedKinds:[...TTO_SUPPORTED_KINDS],supportedActions:[...TTO_SUPPORTED_ACTIONS],supportedCapabilities:[...TTO_SUPPORTED_CAPABILITIES]};
 start();
 })();
