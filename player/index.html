@@ -157,6 +157,11 @@ body{display:block!important;background:#06101c!important}
 #loadGate.error #loadGateLabel{color:#ffd2c9}
 #avatarGrid .thumb img{position:absolute!important;inset:3px!important;width:calc(100% - 6px)!important;height:calc(100% - 6px)!important;object-fit:contain!important;object-position:center!important;max-width:none;max-height:none}
 
+/* v2.5: tablet-authoring canvas scaled uniformly on every portrait screen.
+   Full-bleed background stays device-sized; all published UI dimensions use one scale. */
+#sceneBackdrop{display:block!important;position:absolute!important;inset:0!important;transform:none!important;filter:none!important;opacity:1!important;z-index:0!important;background-size:cover!important;background-position:center!important}
+#designViewport{position:absolute!important;inset:auto!important;left:50%!important;top:50%!important;width:800px!important;height:1280px!important;overflow:hidden!important;transform-origin:center center!important;transform:translate(-50%,-50%) scale(var(--tto-uniform-scale,1))!important;z-index:1!important;box-shadow:none!important}
+#designViewport #scene,#designViewport .old-scene{width:100%!important;height:100%!important}
 /* v2.3: account-bound avatar selection for profiles with no saved registration avatar */
 #avatarProfileTabs{display:flex;gap:8px;margin-top:16px}
 #avatarProfileTabs[hidden]{display:none!important}
@@ -258,14 +263,17 @@ function ttoAuditSceneBundle(input){
  const unique=a=>[...new Set(a)];
  return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
 }
-const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.3.0'});
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.5.0'});
 const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
 const DESIGN_W=390,DESIGN_H=844;
 function updateStageFit(){
- // Fill the real device viewport: the 390×844 mockup must never letterbox the scene.
- // Individual shape-preserving components (rings, avatars, social icons) are sized separately.
+ // Render each scene in the portrait tablet's original aspect ratio, then fit it
+ // uniformly within the device. No per-axis stretching, no mismatched text scaling.
  const viewport=$('designViewport');if(!viewport)return;
- viewport.style.setProperty('--tto-uniform-scale','1');
+ const w=window.visualViewport?.width||window.innerWidth||390;
+ const h=window.visualViewport?.height||window.innerHeight||844;
+ const factor=Math.min(w/800,h/1280);
+ viewport.style.setProperty('--tto-uniform-scale',String(Math.max(.05,factor)));
 }
 
 const MAIN=['Karşılama','Yükleme','Giriş','Kayıt','Anasayfa'];const BOOTSTRAP=JSON.parse($('builtInScenes').textContent);
@@ -520,13 +528,13 @@ function ttoFitLayerText(node, base, scale, kind){
 function fitText(){
  const wrap=$('scene');if(!wrap)return;
  const sw=wrap.clientWidth||390, sh=wrap.clientHeight||844;
- const scale=clamp(Math.min(sw/390,sh/844),.45,2.55);
+ const scale=1.52;
  for(const e of wrap.querySelectorAll('.layer'))ttoFitLayerText(e,e.dataset.baseSize,scale,e.dataset.kind);
 }
 
 function fitAvatarFrame(box,img,origin){if(!img.naturalWidth||!img.naturalHeight)return;const stage=$('scene');if(!stage.clientWidth||!stage.clientHeight)return;const ow=origin.width,oh=origin.height;const widthPx=ow/100*stage.clientWidth,heightPx=oh/100*stage.clientHeight;const ratio=img.naturalWidth/img.naturalHeight;let w=heightPx*ratio,h=heightPx;if(w>widthPx){w=widthPx;h=widthPx/ratio}const originalL=Number(origin.x)/100*stage.clientWidth,originalT=Number(origin.y)/100*stage.clientHeight;box.style.width=100*w/stage.clientWidth+'%';box.style.height=100*h/stage.clientHeight+'%';box.style.left=100*(originalL+(widthPx-w)/2)/stage.clientWidth+'%';box.style.top=100*(originalT+(heightPx-h)/2)/stage.clientHeight+'%'}
 function elem(c,scene){if(!c||c.visible===false||c.kind==='background')return null;const e=document.createElement('div');const kind=String(c.kind||c.type||'panel');e.className='layer';e.dataset.kind=kind;e.dataset.baseSize=c.fontSize||12;e.dataset.phoneFontSize=c.phoneFontSize||'';if(c.metricKey)e.dataset.metric=c.metricKey;e.dataset.variant=c.variant||'glass';e.dataset.motion=c.motion||'';e.dataset.fieldRole=c.fieldRole||'';e.dataset.action=c.action||'';
- e.style.left=clamp(c.x,0,100)+'%';e.style.top=clamp(c.y,0,100)+'%';e.style.width=clamp(c.width,1,100)+'%';e.style.height=clamp(c.height,0.2,100)+'%';e.style.borderRadius=clamp(c.radius??10,0,999)+'px';e.style.color=c.color||'#f9e6c4';e.style.opacity=c.opacity??1;e.style.fontWeight=c.fontWeight||'';e.style.textAlign=c.textAlign||'center';e.style.fontSize=Math.max(7,(Number(c.fontSize)||12)*clamp(Math.min($('scene').clientWidth/390,$('scene').clientHeight/844),.45,2.55))+'px';
+ e.style.left=clamp(c.x,0,100)+'%';e.style.top=clamp(c.y,0,100)+'%';e.style.width=clamp(c.width,1,100)+'%';e.style.height=clamp(c.height,0.2,100)+'%';e.style.borderRadius=clamp(c.radius??10,0,999)+'px';e.style.color=c.color||'#f9e6c4';e.style.opacity=c.opacity??1;e.style.fontWeight=c.fontWeight||'';e.style.textAlign=c.textAlign||'center';e.style.fontSize=(Math.max(4.5,Number(c.fontSize)||12))+'px';
  if(kind==='panel'||kind==='card'){if(c.text)e.textContent=visibleText(c.text);return e}if(kind==='decor')return e;
  if(['text','label','heading'].includes(kind)){if(c.metricKey){e.classList.add('metric');if(c.compactMetric){const lbl=document.createElement('span');lbl.className='label';lbl.textContent=visibleText(c.metricLabel||'');const val=document.createElement('strong');val.className='value';val.textContent=metric(c.metricKey);e.append(lbl,val)}else e.textContent=metric(c.metricKey)}else e.textContent=visibleText(c.text||'');return e}
  if(kind==='ring'){
