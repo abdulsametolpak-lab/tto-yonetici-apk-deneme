@@ -53,7 +53,7 @@ jobs:
           cat > package.json <<'EOF'
           {
             "name": "tto-oyuncu",
-            "version": "2.7.0",
+            "version": "2.8.0",
             "private": true,
             "type": "module",
             "dependencies": {
@@ -82,6 +82,84 @@ jobs:
           assert 'android:screenOrientation="portrait"' in t, 'Dikey ekran ayari yapilamadi'
           PY
 
+      - name: Android tam ekran oyun modunu uygula
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          
+          app = Path('player-build/android/app/src/main')
+          matches = list((app / 'java').rglob('MainActivity.java'))
+          if len(matches) != 1:
+              raise RuntimeError(f'Expected exactly one MainActivity.java, found {len(matches)}')
+          main = matches[0]
+          previous = main.read_text()
+          m = re.search(r'^\\s*package\\s+([\\w.]+)\\s*;', previous, re.M)
+          if not m:
+              raise RuntimeError('Cannot determine original Android package')
+          pkg = m.group(1)
+          code = """package __APP_PACKAGE__;
+
+          import android.os.Bundle;
+          import android.view.WindowManager;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  // Prevent a visible status bar during activity creation.
+                  getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                  super.onCreate(savedInstanceState);
+                  applyGameFullscreen();
+              }
+
+              @Override
+              protected void onResume() {
+                  super.onResume();
+                  applyGameFullscreen();
+              }
+
+              @Override
+              public void onWindowFocusChanged(boolean hasFocus) {
+                  super.onWindowFocusChanged(hasFocus);
+                  if (hasFocus) applyGameFullscreen();
+              }
+
+              private void applyGameFullscreen() {
+                  // Both Android's clock/notification bar and navigation/gesture bar.
+                  // User-initiated system edge gestures may show them temporarily.
+                  WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+                  WindowInsetsControllerCompat controller =
+                      WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+                  controller.setSystemBarsBehavior(
+                      WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                  controller.hide(WindowInsetsCompat.Type.systemBars());
+              }
+          }
+          """
+          main.write_text(code.replace('__APP_PACKAGE__', pkg))
+
+          # Fullscreen also during Android launch/splash theme.
+          style = app / 'res/values/styles.xml'
+          if not style.exists():
+              raise RuntimeError('Android styles.xml not found')
+          xml = style.read_text()
+          changed = 0
+          for theme in ('AppTheme.NoActionBar', 'AppTheme.NoActionBarLaunch'):
+              rx = r'(<style\\s+name="' + re.escape(theme) + r'"[^>]*>)'
+              xml, count = re.subn(rx, r'\\1\\n        <item name="android:windowFullscreen">true</item>', xml, count=1)
+              changed += count
+          if changed == 0:
+              raise RuntimeError('No Capacitor themes found for fullscreen setup')
+          style.write_text(xml)
+          assert 'WindowInsetsCompat.Type.systemBars()' in main.read_text()
+          print('Android immersive fullscreen configured: ' + str(main))
+          PY
+
       - name: Debug APK derle
         working-directory: player-build/android
         run: |
@@ -94,7 +172,7 @@ jobs:
       - name: Oyuncu APK dosyasini yayinla
         uses: actions/upload-artifact@v4
         with:
-          name: TTO-Oyuncu-v2.7-Debug-APK
+          name: TTO-Oyuncu-v2.8-Debug-APK
           path: player-build/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
