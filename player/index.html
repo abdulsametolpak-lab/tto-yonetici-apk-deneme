@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#07121d">
-<title>Türkiye Ticaret Online · Oyuncu v2.7 Responsive Yerleşim</title>
+<title>Türkiye Ticaret Online · Oyuncu v2.8 Tam Ekran</title>
 <style>
 :root{color-scheme:dark;--gold:#e4be7e;--cream:#fff0ce;--blue:#89aac7;--surface:#091a2c;--ease:cubic-bezier(.2,.7,.2,1)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040b12;color:var(--cream);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.52;cursor:wait}
@@ -272,7 +272,7 @@ function ttoAuditSceneBundle(input){
  const unique=a=>[...new Set(a)];
  return {ok:!blocking.length,requiresApk:byType.engine.length+byType.native.length>0,engineVersion:TTO_ENGINE_VERSION,contractVersion:TTO_CONTRACT_VERSION,blocking:unique(blocking),warnings:unique(warnings),byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,unique(v)]))};
 }
-const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.7.0'});
+const CONFIG=Object.freeze({url:'https://fybnrasxalmbxjtynnpk.supabase.co',key:'sb_publishable_npUkJpdP9uCZo5rcZAUbtQ_qe3LOIAe',table:'tto_ui_published_scenes',appVersion:'2.8.0'});
 const $=id=>document.getElementById(id), app=$('app'),status=$('syncState'),banner=$('notice');
 // TTO v2.6: one reference viewport for the published tablet design.
 // Every element has one authored reference size. Extra screen width/height only
