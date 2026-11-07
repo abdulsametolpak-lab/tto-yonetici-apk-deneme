@@ -95,7 +95,7 @@ jobs:
               raise RuntimeError(f'Expected exactly one MainActivity.java, found {len(matches)}')
           main = matches[0]
           previous = main.read_text()
-          m = re.search(r'^\\s*package\\s+([\\w.]+)\\s*;', previous, re.M)
+          m = re.search(r'^\s*package\s+([\w.]+)\s*;', previous, re.M)
           if not m:
               raise RuntimeError('Cannot determine original Android package')
           pkg = m.group(1)
@@ -150,8 +150,8 @@ jobs:
           xml = style.read_text()
           changed = 0
           for theme in ('AppTheme.NoActionBar', 'AppTheme.NoActionBarLaunch'):
-              rx = r'(<style\\s+name="' + re.escape(theme) + r'"[^>]*>)'
-              xml, count = re.subn(rx, r'\\1\\n        <item name="android:windowFullscreen">true</item>', xml, count=1)
+              rx = r'(<style\s+name="' + re.escape(theme) + r'"[^>]*>)'
+              xml, count = re.subn(rx, r'\1\n        <item name="android:windowFullscreen">true</item>', xml, count=1)
               changed += count
           if changed == 0:
               raise RuntimeError('No Capacitor themes found for fullscreen setup')
